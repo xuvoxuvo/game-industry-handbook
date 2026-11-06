@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="以 GameAnalytics 1.6 万款手游基准与 2026 上半年头部产品流水，说明次留、七留、30 留、付费渗透率与 ARPPU 的中位数、门槛与倒推方法。">
+<title>2026 手游留存与付费指标报告</title>
+<link rel="icon" href="../../favicon.svg" type="image/svg+xml">
+<style>
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:#f5f2ec;color:#252a2e;font-family:"Microsoft YaHei","PingFang SC","Hiragino Sans GB","Source Han Sans SC",sans-serif;line-height:1.85;font-size:16px;-webkit-font-smoothing:antialiased}
+a{color:#32677c;text-decoration:none}
+a:hover{text-decoration:underline}
+strong{font-weight:700}
+em.hl{font-style:normal;background:linear-gradient(transparent 60%,#d8e8e3 60%)}
+
+/* ---------- 布局 ---------- */
+.shell{display:grid;grid-template-columns:220px minmax(0,900px);gap:42px;max-width:1240px;margin:auto;padding:48px 35px 72px}
+main{min-width:0}
+
+/* ---------- 左栏 ---------- */
+.rail{position:sticky;top:28px;height:calc(100vh - 56px);overflow:auto;font-size:13px}
+.rail .brand{font-size:23px;font-weight:700;line-height:1.5;letter-spacing:2px;padding-bottom:22px;border-bottom:1px solid #d1ccc1}
+.rail .brand small{display:block;font-size:12px;font-weight:400;letter-spacing:1px;margin-top:5px;color:#6a747b}
+.rail nav{margin-top:16px}
+.rail nav a{display:block;margin:3px 0;padding:8px 12px;color:#57616a;border-left:3px solid transparent;transition:background .15s,color .15s}
+.rail nav a::before{content:"";display:inline-block;width:6px;height:6px;border:1px solid #aab5b9;border-radius:50%;margin-right:10px;vertical-align:middle}
+.rail nav a.visited::before{background:#6d9292;border-color:#6d9292}
+.rail nav a.active{background:#e2ecea;color:#174d4d;border-left-color:#26716b;font-weight:700;text-decoration:none}
+.rail nav a.active::before{background:#26716b;border-color:#26716b;box-shadow:0 0 0 3px #26716b19}
+.reading-status{margin-top:24px;padding:16px 12px;border-top:1px solid #d5dad7}
+.progress-line{display:flex;justify-content:space-between;gap:10px;font-size:12px;color:#61716e}
+.progress-line strong{font-variant-numeric:tabular-nums;color:#26716b}
+.progress-track{height:4px;border-radius:3px;background:#dbe3de;margin:10px 0;overflow:hidden}
+.progress-fill{width:0;height:100%;background:#26716b}
+.current-case{font-size:12px;line-height:1.7;color:#6a7679;overflow-wrap:anywhere}
+.rail .backlink{display:inline-block;margin-top:18px;font-size:12px;color:#6a747b;border-bottom:1px solid #d1ccc1}
+.rail .backlink:hover{color:#26716b;border-color:#26716b;text-decoration:none}
+
+/* ---------- 移动端顶部细进度条 ---------- */
+.top-progress{position:fixed;top:0;left:0;right:0;height:3px;background:#dbe3de;z-index:50;display:none}
+.top-progress>div{height:100%;width:0;background:#26716b}
+
+/* ---------- 头图 ---------- */
+.hero{padding:0 0 35px;margin-bottom:38px;border-bottom:3px solid #344954}
+.eyebrow{color:#65777f;font-size:12px;letter-spacing:3px}
+.hero h1{font-weight:700;font-size:48px;line-height:1.5;letter-spacing:3px;margin:18px 0 20px;color:#252a2e}
+.hero h1 strong{font-weight:700;color:#1f5e59}
+.hero .lead{font-size:18px;line-height:1.9;margin:22px 0;color:#3f515b;max-width:46em}
+.hero p{margin:14px 0;color:#4c565b}
+.meta{display:flex;flex-wrap:wrap;gap:6px 26px;margin-top:26px;padding-top:16px;border-top:1px solid #d3d9d7;font-size:12.5px;color:#788087}
+.meta b{color:#39454f;font-weight:700}
+
+/* ---------- 指标卡 ---------- */
+.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin:26px 0 8px}
+.stat{background:#fffdf9;border-top:5px solid #8fa6aa;padding:13px 14px 15px}
+.stat.accent{border-top-color:#c0573f}
+.stat .s-label{font-size:12px;line-height:1.5;color:#65777f}
+.stat .s-value{font-size:30px;font-weight:700;line-height:1.2;margin:6px 0 3px;color:#26343e;font-variant-numeric:tabular-nums}
+.stat .s-value span{font-size:14px;font-weight:600;color:#6a747b;margin-left:1px}
+.stat.accent .s-value{color:#a8402c}
+.stat .s-foot{font-size:11.5px;color:#788087}
+
+/* ---------- 主体 ---------- */
+section.content-section{padding:0 0 32px;scroll-margin-top:24px}
+h2{font-size:25px;line-height:1.5;color:#263e49;padding:18px 0 12px;border-bottom:1px solid #c8ced0;margin:40px 0 22px}
+h2 .no{color:#26716b;font-weight:700;margin-right:12px;font-variant-numeric:tabular-nums}
+h3{font-size:19px;line-height:1.65;margin:32px 0 13px;font-weight:700;color:#26343e}
+p{margin:14px 0}
+.lead-in{color:#4c565b}
+.small{font-size:13px;color:#6a747b}
+
+/* ---------- 表格 ---------- */
+.table-wrap{overflow-x:auto;margin:20px 0 10px}
+table{width:100%;border-collapse:collapse;font-size:14.5px;line-height:1.65}
+caption{caption-side:top;text-align:left;font-size:12.5px;color:#6a747b;padding-bottom:9px;line-height:1.6}
+th{text-align:left;font-weight:700;font-size:12.5px;letter-spacing:.4px;color:#4d5c63;padding:0 12px 9px 0;border-bottom:2px solid #a9b6b9;white-space:nowrap;vertical-align:bottom}
+td{padding:11px 12px 11px 0;border-bottom:1px solid #dde2e0;vertical-align:top}
+td:last-child,th:last-child{padding-left:14px;padding-right:0}
+tbody tr:hover td{background:#faf8f2}
+.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;font-family:"Cascadia Mono",Consolas,ui-monospace,monospace;font-size:13.5px}
+th.num{text-align:right}
+td.name{font-weight:700;white-space:nowrap;color:#2b3b42}
+.sub{display:block;font-size:11.5px;color:#788087;font-weight:400;margin-top:2px;white-space:nowrap}
+
+/* ---------- 徽章 ---------- */
+.badge{display:inline-block;font-size:11.5px;line-height:1.65;padding:1px 8px;border-radius:3px;white-space:nowrap;vertical-align:1px}
+.b-data{color:#276756;background:#dcece6}
+.b-est{color:#34547a;background:#e6edf6}
+.b-warn{color:#9a493d;background:#f1ded8}
+.b-plain{color:#5b666c;background:#e9e7e0}
+
+/* ---------- 提示块 ---------- */
+.note{font-size:13.5px;background:#e9eef0;padding:16px 20px;color:#4b5a60;border-radius:2px;margin:22px 0}
+.note .n-t{display:block;font-size:11.5px;letter-spacing:1.5px;font-weight:700;color:#4d6b74;margin-bottom:5px}
+.note b{color:#252a2e}
+.terms{background:#fffdf8;border-left:4px solid #b09a71;margin:24px 0;padding:15px 24px;font-size:14px;color:#4c565b}
+.terms b{color:#252a2e}
+.terms .n-t{display:block;font-size:11.5px;letter-spacing:1.5px;font-weight:700;color:#8a744a;margin-bottom:6px}
+
+/* ---------- 公式 ---------- */
+.formula{background:#fffdf9;border:1px solid #d6dce0;padding:20px;margin:22px 0;text-align:center}
+.formula .f{font-size:17px;letter-spacing:.5px;color:#26343e}
+.formula .f .op{color:#8a969b;padding:0 5px}
+.formula .f em{font-style:normal;color:#1f5e59;font-weight:700}
+.formula .f-note{font-size:12.5px;color:#6a747b;margin-top:8px}
+
+/* ---------- 漏斗 ---------- */
+.funnel{margin:22px 0 6px}
+.f-row{display:grid;grid-template-columns:132px 1fr;gap:16px;align-items:center;padding:12px 0;border-bottom:1px dashed #d5dad7}
+.f-row:last-child{border-bottom:none}
+.f-name{font-size:13.5px;font-weight:700;line-height:1.45;color:#2b3b42}
+.f-name span{display:block;font-size:11.5px;color:#788087;font-weight:400}
+.steps{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.step{flex:1;min-width:78px;background:#f1eee7;padding:9px 11px;border-left:2px solid #cfc9bc}
+.step b{display:block;font-size:20px;font-weight:700;line-height:1.25;color:#26343e;font-variant-numeric:tabular-nums;font-family:"Cascadia Mono",Consolas,ui-monospace,monospace}
+.step i{display:block;font-style:normal;font-size:11px;color:#788087;letter-spacing:.5px;margin-top:2px}
+.step.s1{border-left-color:#a9bfa9;background:#f0f4ec}
+.step.s2{border-left-color:#d3c193;background:#f7f2e7}
+.step.s3{border-left-color:#c0573f;background:#faeee9}
+.arrow{color:#c0bbae;font-size:13px;flex:0 0 auto}
+
+/* ---------- 条形图 ---------- */
+.chart{margin:22px 0 6px}
+.bar-row{display:grid;grid-template-columns:158px 1fr 88px;align-items:center;gap:14px;padding:7px 0}
+.b-label{font-size:13.5px;font-weight:700;line-height:1.4;color:#2b3b42}
+.b-label span{display:block;font-size:11.5px;color:#788087;font-weight:400}
+.track{height:12px;background:#e9e6de;position:relative}
+.fill{height:100%;background:#5c8f92}
+.fill.alt{background:#c0573f}
+.b-val{text-align:right;font-size:13.5px;font-weight:700;font-family:"Cascadia Mono",Consolas,monospace;font-variant-numeric:tabular-nums}
+
+/* ---------- 案例卡 ---------- */
+.case{--accent:#56769c;--tint:#e6edf6;background:#fffdf9;border:1px solid #d6dce0;border-left:7px solid var(--accent);padding:22px 26px;margin:26px 0 30px;box-shadow:0 2px 7px #263e4908;scroll-margin-top:20px}
+.case-top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 0 13px;border-bottom:1px solid #dce0e2}
+.case-badge{font-size:14px;line-height:1.6;font-weight:700;color:var(--accent);background:var(--tint);padding:4px 12px;border:1px solid var(--accent);border-radius:4px}
+.case-number{font-size:12.5px;letter-spacing:1px;color:#75808a;white-space:nowrap;font-variant-numeric:tabular-nums}
+.case h3{margin:16px 0 12px;font-size:21px}
+.kv{display:grid;grid-template-columns:88px 1fr;gap:4px 14px;margin:8px 0 12px;font-size:14px}
+.kv dt{color:#788087}
+.kv dd{margin:0;color:#2b3b42}
+.case p{margin:10px 0;font-size:14.5px;color:#4c565b}
+.case p:last-child{margin-bottom:0}
+
+/* ---------- 误读列表 ---------- */
+ol.mis{margin:16px 0 0;padding:0;list-style:none;counter-reset:m}
+ol.mis li{counter-increment:m;position:relative;padding:14px 0 14px 48px;border-bottom:1px solid #dde2e0;font-size:14.5px;color:#4c565b}
+ol.mis li:last-child{border-bottom:none}
+ol.mis li::before{content:counter(m,decimal-leading-zero);position:absolute;left:0;top:15px;font-family:"Cascadia Mono",Consolas,monospace;font-size:12px;color:#a8402c;border:1px solid #d8b3a8;padding:0 5px;line-height:1.6}
+ol.mis b{display:block;color:#252a2e;margin-bottom:1px}
+
+/* ---------- 参考 ---------- */
+.sources{font-size:13px;line-height:1.9;color:#4c565b;margin:0;padding-left:20px}
+.sources li{margin-bottom:5px}
+.sources a{overflow-wrap:anywhere}
+.site-info{border-top:1px solid #c8d0cd;margin-top:44px;padding:22px 0 8px;font-size:12px;line-height:1.95;color:#718079}
+.site-info p{margin:5px 0}
+.site-info .sep{display:inline-block;margin:0 7px;color:#a4aeaa}
+
+/* ---------- 响应式 ---------- */
+@media(max-width:980px){
+  .top-progress{display:block}
+  .shell{grid-template-columns:minmax(0,1fr);gap:0;padding:24px 20px 56px}
+  .rail{position:static;height:auto;overflow:visible}
+  .rail .brand{font-size:19px;padding-bottom:12px;letter-spacing:1px}
+  .rail nav{display:flex;flex-wrap:wrap;gap:5px 6px;margin-top:12px}
+  .rail nav a{margin:0;padding:5px 10px;border:1px solid #d5dad7;border-radius:999px;font-size:12px}
+  .rail nav a::before{display:none}
+  .rail nav a.active{border-color:#26716b}
+  .rail nav a.visited{color:#446b68}
+  .reading-status{margin-top:14px;padding:12px 0;border-top:none}
+  .current-case{display:none}
+  .hero{padding-top:8px}
+  .hero h1{font-size:30px;letter-spacing:1px}
+  .hero .lead{font-size:16.5px}
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .stat:last-child{grid-column:1/-1}
+  .f-row{grid-template-columns:1fr;gap:8px}
+  .bar-row{grid-template-columns:112px 1fr 74px;gap:9px}
+  .case{padding:18px 16px;border-left-width:6px}
+  .case h3{font-size:19px}
+  .kv{grid-template-columns:1fr}
+  .kv dt{font-size:12px;color:#8a949a}
+}
+@media(max-width:520px){
+  .stats{grid-template-columns:1fr}
+  .stat:last-child{grid-column:auto}
+  .hero h1{font-size:27px}
+  .step{min-width:68px;padding:8px}
+  .step b{font-size:17px}
+}
+
+/* ---------- 打印 ---------- */
+@media print{
+  @page{size:A4;margin:14mm}
+  body{background:#fff;font-size:10.5pt}
+  .rail,.top-progress{display:none}
+  .shell{display:block;max-width:none;padding:0}
+  section.content-section{break-inside:auto}
+  h2,h3{break-after:avoid}
+  .case,.note,.terms,.formula{break-inside:avoid;box-shadow:none}
+  .hero{border-bottom-width:2px}
+  .hero h1{font-size:25pt}
+  a{color:inherit;text-decoration:none}
+  thead{display:table-header-group}
+  .case-badge,.badge,.stat{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+</style>
+</head>
+<body>
+
+<div class="top-progress" aria-hidden="true"><div id="topFill"></div></div>
+
+<div class="shell">
+
+  <aside class="rail">
+    <div class="brand">手游留存与付费<small>2026 · Industry Data Brief</small></div>
+    <nav aria-label="文章目录">
+      <a href="#introduction" data-section="introduction" data-label="导语">导语</a>
+      <a href="#s1" data-section="s1" data-label="01 一条结论">01 一条结论</a>
+      <a href="#s2" data-section="s2" data-label="02 指标口径">02 指标口径</a>
+      <a href="#s3" data-section="s3" data-label="03 留存基准">03 留存基准</a>
+      <a href="#s4" data-section="s4" data-label="04 头部产品">04 头部产品</a>
+      <a href="#s5" data-section="s5" data-label="05 付费与 ARPPU">05 付费与 ARPPU</a>
+      <a href="#s6" data-section="s6" data-label="06 品类区间">06 品类区间</a>
+      <a href="#s7" data-section="s7" data-label="07 从留存到回本">07 从留存到回本</a>
+      <a href="#s8" data-section="s8" data-label="08 常见误读">08 常见误读</a>
+      <a href="#s9" data-section="s9" data-label="09 数据来源">09 数据来源</a>
+    </nav>
+    <div class="reading-status">
+      <div class="progress-line"><span id="readingPosition">导语</span><strong id="readingPercent">0%</strong></div>
+      <div id="readingBar" class="progress-track" role="progressbar" aria-label="阅读进度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="readingFill" class="progress-fill"></div></div>
+      <div id="casePosition" class="current-case" hidden></div>
+    </div>
+    <a class="backlink" href="../../">← 全部文章</a>
+  </aside>
+
+  <main>
+
+    <!-- ================= 导语 ================= -->
+    <header id="introduction" class="hero content-section">
+      <div class="eyebrow">INDUSTRY DATA BRIEF · 2026</div>
+      <h1>手游的留存与付费，<br><strong>到底该看多少</strong></h1>
+      <p class="lead">次留、七留、30 留、付费渗透率、ARPPU——五个指标的中位数、头部水平与倒推方法。</p>
+      <p>行业里说的「留存还行」，其实只跑赢了中位数；而发行商筛产品，是按前 10% 的标准在筛。这两条线之间差着 4 倍以上的 D30。</p>
+      <p>本报告的策略是：<strong>留存用行业基准，产品用公开流水与用户规模，付费侧用「流水 ÷ 用户规模」倒推区间</strong>，并逐处标注哪些是实测、哪些是估算。</p>
+
+      <div class="meta">
+        <div><b>数据时点</b>　2026 年 11 月</div>
+        <div><b>基准样本</b>　16,000+ 款手游（MAU ≥ 1,000）</div>
+        <div><b>统计周期</b>　2025 全年 / 2026 H1</div>
+        <div><b>币种口径</b>　美元按 7.1 折算</div>
+      </div>
+
+      <div class="stats">
+        <div class="stat">
+          <div class="s-label">次留 D1<br>全市场中位数</div>
+          <div class="s-value">22<span>%</span></div>
+          <div class="s-foot">P25 仅 12.5%</div>
+        </div>
+        <div class="stat">
+          <div class="s-label">七留 D7<br>全市场中位数</div>
+          <div class="s-value">&lt;4<span>%</span></div>
+          <div class="s-foot">P75 才 6–7%</div>
+        </div>
+        <div class="stat">
+          <div class="s-label">30 留 D30<br>全市场中位数</div>
+          <div class="s-value">0.7<span>%</span></div>
+          <div class="s-foot">四分之三产品不足 3%</div>
+        </div>
+        <div class="stat accent">
+          <div class="s-label">月付费渗透率<br>全球口径</div>
+          <div class="s-value">&lt;5<span>%</span></div>
+          <div class="s-foot">RPG/SLG 约 1.5% 即领先</div>
+        </div>
+        <div class="stat accent">
+          <div class="s-label">30 留 D30<br>头部 1%</div>
+          <div class="s-value">13–15<span>%</span></div>
+          <div class="s-foot">与中位数差 16 倍以上</div>
+        </div>
+      </div>
+
+      <div class="note">
+        <span class="n-t">READ THIS FIRST</span>
+        <b>单款游戏的留存与付费率，几乎不可能从公开渠道查到。</b>厂商财报披露流水和用户规模，但次留、付费渗透率属于核心商业机密。因此本报告把数据分成三层，并在每一处标明它属于哪一层。
+      </div>
+    </header>
+
+    <!-- ================= 01 ================= -->
+    <section id="s1" class="content-section">
+      <h2><span class="no">01</span>一条结论：2026 年的「及格线」</h2>
+
+      <p>先把三条线放在一起看。<em class="hl">行业里说的「还行」，只意味着跑赢了中位数；而能不能投，看的是第三条线。</em></p>
+
+      <div class="table-wrap">
+        <table>
+          <caption>表 1　三条线：全市场中位数 / 发行可投门槛 / 头部 1%（来源：GameAnalytics 2026 基准报告）</caption>
+          <thead>
+            <tr><th>指标</th><th class="num">全市场中位数</th><th class="num">发行可投门槛</th><th class="num">头部 P99</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="name">次留 D1</td><td class="num">22%</td><td class="num">35–40%</td><td class="num">64–68%</td></tr>
+            <tr><td class="name">七留 D7</td><td class="num">&lt; 4%</td><td class="num">10–12%</td><td class="num">25–28%</td></tr>
+            <tr><td class="name">30 留 D30</td><td class="num">0.68–0.79%</td><td class="num">3–5%</td><td class="num">13–15%</td></tr>
+            <tr><td class="name">月付费渗透率</td><td class="num">&lt; 5%</td><td class="num">3–8%（中重度）</td><td class="num">10%+</td></tr>
+            <tr><td class="name">月 ARPPU</td><td class="num">品类差 10 倍以上</td><td class="num">50–500 元</td><td class="num">SLG 可达上千元</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p class="small">发行门槛一列是行业常用的筛选经验值，不是某份报告发布的公开基准；它之所以高于中位数，是因为只有跑在前面 10% 的产品才撑得起 Tier-1 买量成本。</p>
+    </section>
+
+    <!-- ================= 02 ================= -->
+    <section id="s2" class="content-section">
+      <h2><span class="no">02</span>五个指标的正确口径</h2>
+
+      <p>比数字更容易出错的是口径。同一款游戏，换一种算法，付费渗透率可以相差 20 倍。</p>
+
+      <div class="table-wrap">
+        <table>
+          <caption>表 2　指标定义与最常见的口径问题</caption>
+          <thead>
+            <tr><th style="width:88px">指标</th><th style="width:32%">定义</th><th>最常见的口径问题</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="name">次留 D1</td><td>当日新增用户中，次日仍登录的比例</td><td>自然日切割 vs 滚动 24 小时；是否把回流用户算进分母</td></tr>
+            <tr><td class="name">七留 D7</td><td>新增后第 7 天仍登录</td><td>「第 7 天当天登录」与「7 日内任意一天登录」能差近一倍</td></tr>
+            <tr><td class="name">30 留 D30</td><td>新增后第 30 天仍登录</td><td>常与「月留存」混用，但后者分母是月初活跃用户</td></tr>
+            <tr><td class="name">付费渗透率</td><td>付费用户 ÷ 活跃用户</td><td>分母用 DAU / MAU / 注册数；分子用月付费还是累计付费——<b>最多差 20 倍</b></td></tr>
+            <tr><td class="name">ARPPU</td><td>收入 ÷ 付费用户数</td><td>周期是月还是年；含不含渠道分成（iOS 30% 影响巨大）</td></tr>
+            <tr><td class="name">ARPU / ARPDAU</td><td>收入 ÷ 活跃用户（日）</td><td>三者必须同口径：<b>ARPU = 付费渗透率 × ARPPU</b></td></tr>
+            <tr><td class="name">LTV</td><td>单个用户生命周期总价值</td><td>不是独立指标，≈ ARPDAU × 平均活跃天数</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>一个真实例子，说明口径能差多少</h3>
+      <p>艾媒咨询 2026 年调研显示，中国手游用户中 <strong>89.4% 有过付费经历</strong>——「偶尔付费」占 72.6%，「经常付费」占 16.7%，零氪只有 10.6%。但这是<strong>累计口径</strong>。若换成<strong>单款游戏的月付费渗透率</strong>，全球口径普遍<strong>不足 5%</strong>。</p>
+
+      <div class="terms">
+        <span class="n-t">口径对照</span>
+        「89% 的玩家付过费」与「5% 的玩家这个月付了费」<b>都不算错</b>，但它们描述的是两件事：前者是用户生命周期内的转化能力，后者是当期变现强度。对外汇报时，务必在同一句话里说清分母是谁。
+      </div>
+    </section>
+
+    <!-- ================= 03 ================= -->
+    <section id="s3" class="content-section">
+      <h2><span class="no">03</span>留存基准：中位数、区域与平台</h2>
+
+      <p>GameAnalytics《2026 Mobile &amp; PC Gaming Benchmarks》覆盖 1.6 万余款 MAU ≥ 1,000 的手游，统计 2025 全年数据。这是目前公开可查、样本最大的手游留存分布。</p>
+
+      <div class="table-wrap">
+        <table>
+          <caption>表 3　2026 年手游留存分位分布（全球、全品类、iOS + Android 合并）</caption>
+          <thead>
+            <tr><th>分位</th><th class="num">次留 D1</th><th class="num">七留 D7</th><th class="num">30 留 D30</th><th>含义</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="name">后 25%（P25）</td><td class="num">12.5%</td><td class="num">1.7–1.9%</td><td class="num">&lt; 0.5%</td><td class="small">基本没有长线可能</td></tr>
+            <tr><td class="name">中位数（P50）</td><td class="num">22%</td><td class="num">&lt; 4%</td><td class="num">0.68–0.79%</td><td class="small">结构性依赖自然量或广告</td></tr>
+            <tr><td class="name">前 25%（P75）</td><td class="num">30%+</td><td class="num">6–7%</td><td class="num">1.6–1.8%</td><td class="small">尚不足以支撑 Tier-1 买量</td></tr>
+            <tr><td class="name">前 10%（P90）</td><td class="num">40%</td><td class="num">11–12%</td><td class="num">约 4%</td><td class="small">部分市场与渠道可跑正</td></tr>
+            <tr><td class="name">前 1%（P99）</td><td class="num">64–68%</td><td class="num">25–28%</td><td class="num">13–15%</td><td class="small">另一个商业物种</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p class="small">原文特别说明：因品类划分方法正在调整，本期报告<strong>不提供分品类基准</strong>；任何标注为「2026 品类留存」的精确表格，多半来自 2022–2024 的旧数据集。</p>
+
+      <h3>1000 个新增用户，30 天后还剩几个</h3>
+      <div class="funnel">
+        <div class="f-row">
+          <div class="f-name">全市场中位数<span>22% / &lt;4% / 0.7%</span></div>
+          <div class="steps">
+            <div class="step"><b>1000</b><i>新增</i></div><div class="arrow">→</div>
+            <div class="step s1"><b>220</b><i>次日</i></div><div class="arrow">→</div>
+            <div class="step s2"><b>40</b><i>第 7 天</i></div><div class="arrow">→</div>
+            <div class="step s3"><b>7</b><i>第 30 天</i></div>
+          </div>
+        </div>
+        <div class="f-row">
+          <div class="f-name">发行可投门槛<span>38% / 11% / 4%</span></div>
+          <div class="steps">
+            <div class="step"><b>1000</b><i>新增</i></div><div class="arrow">→</div>
+            <div class="step s1"><b>380</b><i>次日</i></div><div class="arrow">→</div>
+            <div class="step s2"><b>110</b><i>第 7 天</i></div><div class="arrow">→</div>
+            <div class="step s3"><b>40</b><i>第 30 天</i></div>
+          </div>
+        </div>
+        <div class="f-row">
+          <div class="f-name">头部 1%<span>66% / 26% / 14%</span></div>
+          <div class="steps">
+            <div class="step"><b>1000</b><i>新增</i></div><div class="arrow">→</div>
+            <div class="step s1"><b>660</b><i>次日</i></div><div class="arrow">→</div>
+            <div class="step s2"><b>260</b><i>第 7 天</i></div><div class="arrow">→</div>
+            <div class="step s3"><b>140</b><i>第 30 天</i></div>
+          </div>
+        </div>
+      </div>
+
+      <h3>三个容易被忽略的结构性差异</h3>
+      <p><strong>1）D30 的分化是 16 倍，不是 1.5 倍。</strong>中位数 0.7%，头部 14%。这不是「优秀与平庸」的差别，而是两种商业模式：前者靠广告变现，后者靠内购。用同一个 D30 目标去考核两类产品，没有意义。</p>
+      <p><strong>2）基准本身在下滑。</strong>D1 中位数延续下行，P25 从 13.42% 降至 12.45%。去年的及格线，今年可能已经偏低。</p>
+      <p><strong>3）iOS 系统性高于 Android。</strong>在 P75 区间，iOS 的 D1 为 31–33%，Android 为 25–27%。用一套混合目标值考核两个平台，Android 会被「冤枉」。</p>
+
+      <div class="table-wrap">
+        <table>
+          <caption>表 4　主要区域留存中位数（P50），亚洲在 D7 / D30 上明显偏低</caption>
+          <thead>
+            <tr><th>区域</th><th class="num">D1</th><th class="num">D7</th><th class="num">D30</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="name">大洋洲</td><td class="num">25.63%</td><td class="num">5.60%</td><td class="num">1.39%</td></tr>
+            <tr><td class="name">北美</td><td class="num">23.28%</td><td class="num">4.97%</td><td class="num">1.18%</td></tr>
+            <tr><td class="name">欧洲</td><td class="num">22.20%</td><td class="num">4.06%</td><td class="num">0.92%</td></tr>
+            <tr><td class="name">中东</td><td class="num">21.90%</td><td class="num">3.74%</td><td class="num">0.79%</td></tr>
+            <tr><td class="name">中美</td><td class="num">21.37%</td><td class="num">3.71%</td><td class="num">0.78%</td></tr>
+            <tr><td class="name">南美</td><td class="num">20.09%</td><td class="num">3.25%</td><td class="num">0.65%</td></tr>
+            <tr><td class="name">亚洲</td><td class="num">17.50%</td><td class="num">2.68%</td><td class="num">0.53%</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="small">亚洲 D1 低但用户基数大、付费深度高，因此不能用「留存低 = 市场差」来判断。做小规模测试（Soft Launch）时，东南亚数据对北美/欧洲的预测力有限。</p>
+    </section>
+
+    <!-- ================= 04 ================= -->
+    <section id="s4" class="content-section">
+      <h2><span class="no">04</span>2026 年头部产品：能查到的硬数据</h2>
+
+      <p>按 AppMagic 统计的 2026 上半年全球内购收入（已扣平台分成，不含国内安卓第三方渠道、网页商店与广告收入）：</p>
+
+      <div class="table-wrap">
+        <table>
+          <caption>表 5　2026 H1 全球手游内购收入 TOP 10</caption>
+          <thead>
+            <tr><th>产品</th><th>品类</th><th class="num">2026 H1</th><th>其他公开数据</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="name">王者荣耀<span class="sub">腾讯</span></td><td>MOBA</td><td class="num">约 10 亿美元<span class="sub">≈ 67 亿元</span></td><td>全球累计内购 175 亿美元；日活约 1.39 亿、月活约 2.6 亿（媒体口径）</td></tr>
+            <tr><td class="name">无尽冬日<span class="sub">点点互动</span></td><td>SLG</td><td class="num">7.23 亿美元</td><td>2025 全年 21 亿美元、同比 +45%，全球 SLG 收入第一</td></tr>
+            <tr><td class="name">Last War<span class="sub">FirstFun</span></td><td>SLG</td><td class="num">6.93 亿美元</td><td>1 月单月 1.2 亿美元，波动剧烈</td></tr>
+            <tr><td class="name">Royal Match<span class="sub">Dream Games</span></td><td>消除</td><td class="num">6.80 亿美元</td><td>1 月 1.09 亿美元，创近三月新高</td></tr>
+            <tr><td class="name">PUBG Mobile<span class="sub">腾讯</span></td><td>射击</td><td class="num">6.76 亿美元</td><td>约 80% 营收来自中国玩家</td></tr>
+            <tr><td class="name">Gossip Harbor<span class="sub">柠檬微趣</span></td><td>合成</td><td class="num">6.26 亿美元</td><td>1 月首破 8000 万美元，持续创新高</td></tr>
+            <tr><td class="name">Roblox<span class="sub">Roblox Corp.</span></td><td>UGC 平台</td><td class="num">6.25 亿美元</td><td>用户结构与其他产品不可直接对比</td></tr>
+            <tr><td class="name">Monopoly Go<span class="sub">Scopely</span></td><td>休闲棋盘</td><td class="num">6.04 亿美元</td><td>1 月 1.2 亿美元，同比正增长</td></tr>
+            <tr><td class="name">糖果传奇<span class="sub">King</span></td><td>消除</td><td class="num">5.83 亿美元</td><td>流水极稳，连续 4 个月环比微增</td></tr>
+            <tr><td class="name">Kingshot<span class="sub">点点互动</span></td><td>SLG</td><td class="num">5.45 亿美元</td><td>1 月 7200 万美元，连续刷新历史纪录</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p class="small">入榜门槛被抬到 5.45 亿美元；前十里国产游戏占 5 席。</p>
+
+      <h3>五个体量之外的案例，信息量更大</h3>
+
+      <article class="case">
+        <div class="case-top">
+          <span class="case-badge">射击 · 搜打撤</span>
+          <span class="case-number">案例 01 / 05</span>
+        </div>
+        <h3>三角洲行动</h3>
+        <div class="kv">
+          <dt>月流水</dt><dd>1 月 4400 万美元 → 10 月 2350 万美元（-39%）</dd>
+          <dt>用户规模</dt><dd>国内 MAU 约 7000 万</dd>
+        </div>
+        <p><b>为什么值得看：</b>MAU 接近射击品类第 2–5 名之和，是名副其实的国民级产品；但单月流水波动可达 40%。<strong>「体量大」不等于「收入稳」</strong>，看这类产品要拉长到赛季周期，而不是盯单月。</p>
+      </article>
+
+      <article class="case">
+        <div class="case-top">
+          <span class="case-badge">二次元 · 抽卡</span>
+          <span class="case-number">案例 02 / 05</span>
+        </div>
+        <h3>原神</h3>
+        <div class="kv">
+          <dt>月流水</dt><dd>1 月 4300 万美元</dd>
+          <dt>用户规模</dt><dd>月活 4000–5000 万；累计流水保守超 70 亿美元</dd>
+        </div>
+        <p><b>为什么值得看：</b>上线六年仍是头部，说明内容型产品的生命周期可以很长；但月度收入极不稳定，与 2020–2023 年的峰值差距明显。<strong>版本更新节奏直接决定单月曲线</strong>。</p>
+      </article>
+
+      <article class="case">
+        <div class="case-top">
+          <span class="case-badge">搜打撤 · 中式微恐</span>
+          <span class="case-number">案例 03 / 05</span>
+        </div>
+        <h3>超自然行动组</h3>
+        <div class="kv">
+          <dt>流水</dt><dd>累计突破 50 亿元（截至 2026 Q1）</dd>
+          <dt>用户规模</dt><dd>DAU 破千万；累计注册超 2 亿</dd>
+        </div>
+        <p><b>为什么值得看：</b>以「中式微恐 + 搜打撤」做出差异化，验证了中等体量产品的长线承载力。<strong>不是只有大 IP 才能做长线</strong>——玩法本身的可复玩性才是留存的地基。</p>
+      </article>
+
+      <article class="case">
+        <div class="case-top">
+          <span class="case-badge">开放世界 · 跨端</span>
+          <span class="case-number">案例 04 / 05</span>
+        </div>
+        <h3>异环</h3>
+        <div class="kv">
+          <dt>流水</dt><dd>全球首日 1 亿元；国服 15 天约 3 亿元</dd>
+          <dt>平台结构</dt><dd>PC 端占流水 65%，移动端不足 30%</dd>
+        </div>
+        <p><b>为什么值得看：</b>只看移动端会严重低估这类产品。<strong>多端互通正在改写「手游」的统计边界</strong>：同一款产品，按移动端口径算和按全平台算，ARPU 能差两倍以上。</p>
+      </article>
+
+      <article class="case">
+        <div class="case-top">
+          <span class="case-badge">开放世界 · 新游</span>
+          <span class="case-number">案例 05 / 05</span>
+        </div>
+        <h3>洛克王国：世界</h3>
+        <div class="kv">
+          <dt>用户规模</dt><dd>MAU 1700 万</dd>
+          <dt>位置</dt><dd>2026 年唯一 MAU 破千万的新游</dd>
+        </div>
+        <p><b>为什么值得看：</b>版号发放量同比 +21%，但新增机会并没有转化成足够多的成功新品。<strong>供给变多不等于成功概率变高</strong>，头部集中度反而在上升。</p>
+      </article>
+
+      <div class="note">
+        <span class="n-t">结构信号</span>
+        2026 年国内移动游戏收入 1,352 亿元（同比 +8%），用户 6.84 亿（同比 +0.8%），<b>ARPU 同比 +11.4%</b>。收入增长几乎全部来自单用户价值提升——这正是留存与付费深度比拉新更重要的原因。
+      </div>
+    </section>
+
+    <!-- ================= 05 ================= -->
+    <section id="s5" class="content-section">
+      <h2><span class="no">05</span>付费渗透率与 ARPPU：一个可复用的倒推法</h2>
+
+      <p>既然单产品付费率不公开，就用两个能查到的数倒推：月流水和 MAU。</p>
+
+      <div class="formula">
+        <div class="f">月 ARPPU <span class="op">≈</span> （月流水 <span class="op">÷</span> MAU） <span class="op">÷</span> <em>月付费渗透率</em></div>
+        <div class="f-note">括号内即「每 MAU 月均贡献收入」，又称月度口径的 ARPU</div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <caption>表 6　按公开流水与用户规模倒推（MAU 与付费率为假设值，仅作量级参考）</caption>
+          <thead>
+            <tr><th>产品</th><th class="num">月流水</th><th class="num">MAU</th><th class="num">每 MAU 月收入</th><th class="num">假设月付费率</th><th class="num">推算月 ARPPU</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="name">王者荣耀</td><td class="num">1.67 亿美元</td><td class="num">2.6 亿</td><td class="num">4.6 元</td><td class="num">10%</td><td class="num">约 46 元</td></tr>
+            <tr><td class="name">三角洲行动</td><td class="num">4400 万美元</td><td class="num">7000 万</td><td class="num">4.5 元</td><td class="num">10%</td><td class="num">约 45 元</td></tr>
+            <tr><td class="name">原神</td><td class="num">4300 万美元</td><td class="num">4500 万</td><td class="num">6.8 元</td><td class="num">5%</td><td class="num">约 136 元</td></tr>
+            <tr><td class="name">无尽冬日</td><td class="num">约 1.2 亿美元</td><td class="num">约 2000 万 <span class="badge b-plain">估</span></td><td class="num">43 元</td><td class="num">3%</td><td class="num">约 1400 元</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>每 MAU 月收入的 10 倍差距，就是品类差距</h3>
+      <div class="chart">
+        <div class="bar-row">
+          <div class="b-label">王者荣耀<span>MOBA · 高渗透低 ARPPU</span></div>
+          <div class="track"><div class="fill" style="width:10.7%"></div></div>
+          <div class="b-val">4.6 元</div>
+        </div>
+        <div class="bar-row">
+          <div class="b-label">三角洲行动<span>射击 · 皮肤与通行证</span></div>
+          <div class="track"><div class="fill" style="width:10.5%"></div></div>
+          <div class="b-val">4.5 元</div>
+        </div>
+        <div class="bar-row">
+          <div class="b-label">原神<span>二次元 · 角色抽卡</span></div>
+          <div class="track"><div class="fill" style="width:15.8%"></div></div>
+          <div class="b-val">6.8 元</div>
+        </div>
+        <div class="bar-row">
+          <div class="b-label">无尽冬日<span>SLG · 大 R 驱动</span></div>
+          <div class="track"><div class="fill alt" style="width:100%"></div></div>
+          <div class="b-val">43 元</div>
+        </div>
+      </div>
+      <p class="small">条形长度按「每 MAU 月收入」等比例绘制，最大值取 43 元。</p>
+
+      <p>这张图解释了两种完全不同的生意。</p>
+      <p><strong>王者荣耀与三角洲是「高渗透、低 ARPPU」。</strong>靠 6 元皮肤、30 元战令覆盖几千万人，单用户每月只贡献几元，但基数极大。这类产品的健康指标是<strong>付费渗透率</strong>，不是 ARPPU。</p>
+      <p><strong>SLG 是「低渗透、高 ARPPU」。</strong>每 MAU 月贡献是射击类的 7–10 倍，靠的是极少数大 R。全球数据显示，<strong>前 5% 付费用户贡献约 48% 的内购收入</strong>，在部分品类里 1–2% 的玩家就贡献过半。这类产品的健康指标是<strong>大 R 留存与分层运营</strong>。</p>
+
+      <div class="table-wrap">
+        <table>
+          <caption>表 7　付费侧参考值（ARPDAU 为第三方汇编区间，口径不一，仅供量级参考）</caption>
+          <thead>
+            <tr><th>指标</th><th>超休闲</th><th>休闲三消</th><th>中核 RPG</th><th>4X 策略</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="name">ARPDAU</td><td class="num">$0.01–0.05</td><td class="num">$0.03–0.10</td><td class="num">$0.08–0.20</td><td class="num">$0.10–0.35</td></tr>
+            <tr><td class="name">月付费渗透率</td><td class="num">0.3–1%</td><td class="num">0.5–2%</td><td class="num">1.5–4%</td><td class="num">1.5–3%</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>交叉验证：把大盘算一遍</h3>
+      <p>2026 上半年国内移动游戏收入 1,352 亿元、用户 6.84 亿，人均月支出约 <strong>33 元</strong>。若月付费渗透率取 5–8%，对应的全市场 ARPPU 就是 <strong>410–660 元/月</strong>——与上面四类产品按体量加权后的结果基本吻合。这个自洽性说明：倒推法虽然粗，但方向可用。</p>
+    </section>
+
+    <!-- ================= 06 ================= -->
+    <section id="s6" class="content-section">
+      <h2><span class="no">06</span>分品类经验区间</h2>
+
+      <p class="small">以下不是官方披露数据，而是「能跑买量」的成功产品常见区间，由多家第三方口径汇编与访谈归纳，用于定位量级，不可作为精确基准。它们明显高于全市场中位数——这是筛选后的结果，不是平均水平。</p>
+
+      <div class="table-wrap">
+        <table>
+          <caption>表 8　分品类留存与付费经验区间</caption>
+          <thead>
+            <tr><th>品类</th><th class="num">月付费渗透率</th><th class="num">月 ARPPU</th><th class="num">D1 / D7 / D30</th><th>核心付费点</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="name">休闲消除 / 合成</td><td class="num">2–5%</td><td class="num">30–100 元</td><td class="num">35–45 / 15–20 / 6–10</td><td>体力、道具、关卡礼包</td></tr>
+            <tr><td class="name">竞技 / 派对</td><td class="num">8–15%</td><td class="num">30–80 元</td><td class="num">35–45 / 12–18 / 5–8</td><td>皮肤、战令、社交展示</td></tr>
+            <tr><td class="name">射击 / 搜打撤</td><td class="num">6–12%</td><td class="num">50–150 元</td><td class="num">30–40 / 10–15 / 4–6</td><td>枪械皮肤、赛季通行证</td></tr>
+            <tr><td class="name">二次元抽卡</td><td class="num">3–6%</td><td class="num">200–600 元</td><td class="num">35–45 / 12–18 / 5–8</td><td>角色、武器、命座</td></tr>
+            <tr><td class="name">SLG（4X）</td><td class="num">2–4%</td><td class="num">500–2000 元</td><td class="num">30–40 / 8–12 / 3–5</td><td>加速、资源、联盟地位</td></tr>
+            <tr><td class="name">小游戏 IAP</td><td class="num">3–6%</td><td class="num">50–150 元</td><td class="num">20–30 / 5–8 / 1–2</td><td>首充、特权、看广告替代</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="terms">
+        <span class="n-t">2026 的结构性变化</span>
+        小游戏正在抬高付费天花板：微信小游戏 MAU 达 6.54 亿（同比 +33%），46 岁以上用户占比最高，<b>高氪人群占比约为手游的 2 倍</b>；女性付费用户数同比 +20%、ARPPU 同比 +10%。同一款玩法，搬到小游戏后付费结构可能完全不同。
+      </div>
+    </section>
+
+    <!-- ================= 07 ================= -->
+    <section id="s7" class="content-section">
+      <h2><span class="no">07</span>从留存到回本：LTV 的算法</h2>
+
+      <div class="formula">
+        <div class="f">LTV <span class="op">≈</span> ARPDAU <span class="op">×</span> <em>平均活跃天数</em></div>
+      </div>
+
+      <p>留存曲线决定「活多久」，ARPDAU 决定「每天值多少钱」。一个直观换算：<strong>D30 只有 4% 的产品，平均每个新增用户的总活跃天数通常只有 8–12 天；D30 能做到 8% 的，可以到 15–20 天。</strong></p>
+
+      <p>举例：D1 40% / D7 12% / D30 4% 的产品，若 ARPDAU 为 0.8 元，则 LTV ≈ 6–10 元。若买量 CPI 是 30 元，模型不成立——这与创意好坏无关，是数学问题。反过来，SLG 能做到 ARPDAU 3 元以上，同样 10 天活跃就能撑起 30 元以上的 LTV。</p>
+
+      <h3>因此筛产品的顺序是固定的</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th style="width:52px">顺序</th><th>看什么</th><th>判断什么</th><th>不达标意味着</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="name">第一步</td><td>D1 与 D7</td><td>能不能留住人</td><td>买量一定亏，先改新手引导与前期进度</td></tr>
+            <tr><td class="name">第二步</td><td>D30</td><td>LTV 天花板有多高</td><td>内容深度与 LiveOps 不足，长线做不起来</td></tr>
+            <tr><td class="name">第三步</td><td>付费率与 ARPPU</td><td>变现效率与付费点设计</td><td>可以在留存达标后再调，次序不能反</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>留存不够，付费设计再好也没用；付费率低但留存极高（如王者荣耀），照样是顶级生意。<strong>先活下来，再谈值多少钱。</strong></p>
+    </section>
+
+    <!-- ================= 08 ================= -->
+    <section id="s8" class="content-section">
+      <h2><span class="no">08</span>五个常见误读</h2>
+
+      <ol class="mis">
+        <li><b>拿中位数当目标。</b>22% 的 D1 是全市场（含大量无人运营的小游戏）的中位数，不是及格线。发行商实际按 P90 在筛。</li>
+        <li><b>跨品类直接比较。</b>消除的 D30 10% 与 SLG 的 D30 5% 不是同一个含义：前者是习惯，后者是内容消耗速度。</li>
+        <li><b>忽略渠道与买量结构。</b>买量用户的留存天然低于自然量，同一款游戏在不同渠道可以差 5–10 个百分点。</li>
+        <li><b>用累计付费率谈当期变现。</b>89% 的「付过费」和 5% 的「本月付费」是两个世界，汇报时必须写清分母。</li>
+        <li><b>唯流水论。</b>三角洲 1 月 4400 万美元、10 月 2350 万美元，单月波动 40% 是常态；看长线要看 D30、D90 与赛季回收。</li>
+      </ol>
+    </section>
+
+    <!-- ================= 09 ================= -->
+    <section id="s9" class="content-section">
+      <h2><span class="no">09</span>数据来源与免责声明</h2>
+
+      <ol class="sources">
+        <li>GameAnalytics，《2026 Mobile &amp; PC Gaming Benchmarks》，2026 年 8 月更新（16,000+ 款手游，2025 全年数据）。<a href="https://www.gameanalytics.com/reports/2026-mobile-pc-gaming-benchmarks" target="_blank" rel="noopener">gameanalytics.com</a></li>
+        <li>Mobilegamer.biz / AppMagic，2026 年 1 月全球手游收入榜（经 36 氪、17173 转载）。<a href="https://www.36kr.com/p/3668697166668674" target="_blank" rel="noopener">36kr.com</a>　<a href="https://news.17173.com/content/08042026/115440375.shtml" target="_blank" rel="noopener">17173.com</a></li>
+        <li>QuestMobile，《2026 年手游半年报》（经游戏干线整理）。<a href="https://www.163.com/dy/article/L36T51A005268VHQ_pdya11y.html" target="_blank" rel="noopener">163.com</a></li>
+        <li>中金公司，《游戏 1H26：新周期叙事，本土深潜与全球突围》，2026 年 8 月。<a href="https://finance.sina.com.cn/stock/stockzmt/2026-08-04/doc-inimcatx2254451.shtml" target="_blank" rel="noopener">新浪财经</a></li>
+        <li>艾媒咨询，《2026 年中国手游用户消费行为洞察》。<a href="https://www.iimedia.cn/c1061/113994.html" target="_blank" rel="noopener">iimedia.cn</a></li>
+        <li>AppsFlyer / Moloco 口径汇编（付费率、收入集中度、ARPDAU）。<a href="https://www.thinkingai.cn/hub/scenarios/game-data-analytics-guide/" target="_blank" rel="noopener">thinkingai.cn</a></li>
+        <li>GameMantra，Whale segmentation beyond the binary（5% / 65% 集中度），2026 年 6 月。<a href="https://blog.gamemantra.ai/whale-segmentation-beyond-the-binary-2026" target="_blank" rel="noopener">gamemantra.ai</a></li>
+        <li>《超自然行动组》长线数据（DoNews / 松果财经，2026 年 7 月）。<a href="https://www.donews.com/article/detail/5459/103995.html" target="_blank" rel="noopener">donews.com</a></li>
+        <li>DataEye，《异环》首月流水拆解（钛媒体，2026 年 5 月）。<a href="https://www.tmtpost.com/7991562.html" target="_blank" rel="noopener">tmtpost.com</a></li>
+        <li>Delta Force Mobile 10 月收入下滑（OtakuKart，2026 年 11 月）。<a href="https://otakukart.com/delta-force-mobile-revenue-falls-39-in-october-2026-dropping-from-38-2-million-to-23-5-million/" target="_blank" rel="noopener">otakukart.com</a></li>
+      </ol>
+
+      <div class="note" style="margin-top:26px">
+        <span class="n-t">免责声明</span>
+        留存基准为 GameAnalytics 原始报告数据；流水与用户规模为 AppMagic、Sensor Tower、QuestMobile 第三方监测，与厂商财报口径存在差异（不含国内安卓第三方渠道与网页商店，已扣平台分成）。<b>表 6 及「推算月 ARPPU」列为基于公开流水的倒推区间，MAU 与付费率均为假设值，不是厂商披露数据</b>，不可用于对外引用或投资决策。
+      </div>
+
+      <div class="site-info">
+        <p><b>2026 手游留存与付费指标报告</b><span class="sep">·</span>数据截至 2026 年 11 月<span class="sep">·</span>单页 HTML，无外部依赖，可离线打开与 A4 打印</p>
+        <p>数据分层：行业基准（GameAnalytics）<span class="sep">/</span>第三方监测（AppMagic、Sensor Tower、QuestMobile）<span class="sep">/</span>倒推估算（本报告测算）</p>
+        <p>Copyright © 2026　本页可自由转载，请保留来源与数据截止时间。</p>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script>
+(function(){
+  var sections = Array.prototype.slice.call(document.querySelectorAll('main > .content-section'));
+  var navLinks = Array.prototype.slice.call(document.querySelectorAll('.rail nav a[data-section]'));
+  var cases = Array.prototype.slice.call(document.querySelectorAll('.case'));
+  var percent = document.getElementById('readingPercent');
+  var fill = document.getElementById('readingFill');
+  var position = document.getElementById('readingPosition');
+  var casePosition = document.getElementById('casePosition');
+  var bar = document.getElementById('readingBar');
+  var topFill = document.getElementById('topFill');
+  var scheduled = false;
+
+  function updateReading(){
+    scheduled = false;
+    var max = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+    var progress = max ? Math.min(100, Math.max(0, 100 * window.scrollY / max)) : 100;
+    var rounded = Math.round(progress);
+    if (percent) percent.textContent = rounded + '%';
+    if (fill) fill.style.width = progress + '%';
+    if (topFill) topFill.style.width = progress + '%';
+    if (bar) bar.setAttribute('aria-valuenow', String(rounded));
+
+    var threshold = Math.min(200, window.innerHeight * 0.23);
+    var index = 0;
+    sections.forEach(function(section, i){
+      if (section.getBoundingClientRect().top <= threshold) index = i;
+    });
+    if (max - window.scrollY < 3) index = sections.length - 1;
+
+    navLinks.forEach(function(link, i){
+      link.classList.toggle('active', i === index);
+      link.classList.toggle('visited', i < index);
+      if (i === index) link.setAttribute('aria-current', 'location');
+      else link.removeAttribute('aria-current');
+    });
+    if (position && navLinks[index]) position.textContent = navLinks[index].dataset.label;
+
+    var activeCase = null;
+    cases.forEach(function(c){ if (c.getBoundingClientRect().top <= threshold) activeCase = c; });
+    if (casePosition){
+      casePosition.hidden = !activeCase;
+      if (activeCase){
+        var n = cases.indexOf(activeCase) + 1;
+        casePosition.textContent = '案例 ' + String(n).padStart(2, '0') + ' / ' + cases.length + ' · ' + activeCase.querySelector('h3').textContent;
+      }
+    }
+  }
+
+  function requestUpdate(){
+    if (!scheduled){ scheduled = true; requestAnimationFrame(updateReading); }
+  }
+
+  window.addEventListener('scroll', requestUpdate, {passive: true});
+  window.addEventListener('resize', requestUpdate);
+  window.addEventListener('load', requestUpdate);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(requestUpdate);
+  updateReading();
+})();
+</script>
+</body>
+</html>
+
