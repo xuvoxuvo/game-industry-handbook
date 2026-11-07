@@ -24,6 +24,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # 首次运行会把仓库的 Pages 打开（Source = GitHub Actions），之后无需再手动设置。
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
       # 站点是纯静态文件，没有构建步骤，只把要发布的文件挑出来。
       - name: Collect site files
         run: |
