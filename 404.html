@@ -5,19 +5,31 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>页面不存在 · 游戏行业知识手册</title>
 <meta name="robots" content="noindex">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
 <style>
-body{margin:0;min-height:100vh;display:grid;place-items:center;background:#f5f2ec;color:#252a2e;font-family:"Microsoft YaHei","PingFang SC",sans-serif;line-height:1.85}
-.box{padding:32px;max-width:34em}
-h1{font-size:28px;margin:10px 0 12px}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;display:flex;flex-direction:column;justify-content:center;background:#f5f2ec;color:#252a2e;font-family:"Microsoft YaHei","PingFang SC",sans-serif;line-height:1.85}
+.box{margin:auto;padding:32px;max-width:34em;width:100%}
+.eyebrow{font-size:12px;letter-spacing:3px;color:#65777f}
+h1{font-size:28px;margin:10px 0 12px;font-weight:700}
 p{color:#6a747b;margin:0}
-a{color:#32677c}
+a{color:#32677c;text-decoration:none}
+a:hover{text-decoration:underline}
+.foot{max-width:34em;width:100%;margin:0 auto;padding:20px 32px 40px;border-top:1px solid #c8d0cd;font-size:12.5px;line-height:1.95;color:#718079}
+.foot p{margin:5px 0}
+.foot a{color:#32677c;border-bottom:1px solid #c8d0cd}
+.foot a:hover{color:#26716b;border-color:#26716b;text-decoration:none}
 </style>
 </head>
 <body>
 <div class="box">
-  <div style="font-size:12px;letter-spacing:3px;color:#65777f">404</div>
+  <div class="eyebrow">404</div>
   <h1>这一页不存在</h1>
-  <p>链接可能已经过期。<a href="/game-industry-handbook/">回到文章列表</a>。</p>
+  <p>链接可能已经过期。<a href="./">回到文章列表</a>。</p>
 </div>
+<footer class="foot">
+  <p>喜欢本项目？<a href="https://github.com/xuvoxuvo/game-industry-handbook">点个 Star</a> 吧！</p>
+  <p>Copyright © 2017-2026 设计者笔记. All rights reserved.</p>
+</footer>
 </body>
 </html>
