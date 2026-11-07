@@ -11,10 +11,10 @@
 ```text
 .
 ├── index.html                                  # 文章列表
-├── articles/2026-mobile-game-metrics/index.html # 正文（单文件，样式与脚本内联）
-├── reports/2026-mobile-game-metrics/index.html  # 旧地址跳转
+├── articles/<slug>/index.html                   # 正文（单文件，样式与脚本内联）
 ├── 404.html
-└── favicon.svg
+├── favicon.svg
+└── WORKFLOW.md                                 # 新增文章的完整步骤
 ```
 
 每个页面都是自包含的：CSS 和 JS 内联，没有外部依赖，可以单独发人、离线打开、A4 打印。
