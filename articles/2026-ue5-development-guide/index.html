@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="基于 Unreal Engine 5.8 的版本决策、技术选型、生产节奏与 AI 工具链建议。">
+<title>UE 游戏开发建议报告 · 2026</title>
+<link rel="icon" href="../../favicon.svg" type="image/svg+xml">
+<style>
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:#f5f2ec;color:#252a2e;font-family:"Microsoft YaHei","PingFang SC","Hiragino Sans GB","Source Han Sans SC",sans-serif;line-height:1.85;font-size:16px;-webkit-font-smoothing:antialiased}
+a{color:#32677c;text-decoration:none}
+a:hover{text-decoration:underline}
+strong{font-weight:700}
+em.hl{font-style:normal;background:linear-gradient(transparent 60%,#d8e8e3 60%)}
+
+/* ---------- 布局 ---------- */
+.shell{display:grid;grid-template-columns:220px minmax(0,900px);gap:42px;max-width:1240px;margin:auto;padding:48px 35px 72px}
+main{min-width:0}
+
+/* ---------- 左栏 ---------- */
+.rail{position:sticky;top:28px;height:calc(100vh - 56px);overflow:auto;font-size:13px}
+.rail .brand{font-size:23px;font-weight:700;line-height:1.5;letter-spacing:2px;padding-bottom:22px;border-bottom:1px solid #d1ccc1}
+.rail .brand small{display:block;font-size:12px;font-weight:400;letter-spacing:1px;margin-top:5px;color:#6a747b}
+.rail nav{margin-top:16px}
+.rail nav a{display:block;margin:3px 0;padding:8px 12px;color:#57616a;border-left:3px solid transparent;transition:background .15s,color .15s}
+.rail nav a::before{content:"";display:inline-block;width:6px;height:6px;border:1px solid #aab5b9;border-radius:50%;margin-right:10px;vertical-align:middle}
+.rail nav a.visited::before{background:#6d9292;border-color:#6d9292}
+.rail nav a.active{background:#e2ecea;color:#174d4d;border-left-color:#26716b;font-weight:700;text-decoration:none}
+.rail nav a.active::before{background:#26716b;border-color:#26716b;box-shadow:0 0 0 3px #26716b19}
+.reading-status{margin-top:24px;padding:16px 12px;border-top:1px solid #d5dad7}
+.progress-line{display:flex;justify-content:space-between;gap:10px;font-size:12px;color:#61716e}
+.progress-line strong{font-variant-numeric:tabular-nums;color:#26716b}
+.progress-track{height:4px;border-radius:3px;background:#dbe3de;margin:10px 0;overflow:hidden}
+.progress-fill{width:0;height:100%;background:#26716b}
+.current-case{font-size:12px;line-height:1.7;color:#6a7679;overflow-wrap:anywhere}
+.rail .backlink{display:inline-block;margin-top:18px;font-size:12px;color:#6a747b;border-bottom:1px solid #d1ccc1}
+.rail .backlink:hover{color:#26716b;border-color:#26716b;text-decoration:none}
+
+/* ---------- 移动端顶部细进度条 ---------- */
+.top-progress{position:fixed;top:0;left:0;right:0;height:3px;background:#dbe3de;z-index:50;display:none}
+.top-progress>div{height:100%;width:0;background:#26716b}
+
+/* ---------- 头图 ---------- */
+.hero{padding:0 0 35px;margin-bottom:38px;border-bottom:3px solid #344954}
+.eyebrow{color:#65777f;font-size:12px;letter-spacing:3px}
+.hero h1{font-weight:700;font-size:48px;line-height:1.5;letter-spacing:3px;margin:18px 0 20px;color:#252a2e}
+.hero h1 strong{font-weight:700;color:#1f5e59}
+.hero .lead{font-size:18px;line-height:1.9;margin:22px 0;color:#3f515b;max-width:46em}
+.hero p{margin:14px 0;color:#4c565b}
+.meta{display:flex;flex-wrap:wrap;gap:6px 26px;margin-top:26px;padding-top:16px;border-top:1px solid #d3d9d7;font-size:12.5px;color:#788087}
+.meta b{color:#39454f;font-weight:700}
+
+/* ---------- 指标卡 ---------- */
+.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin:26px 0 8px}
+.stat{background:#fffdf9;border-top:5px solid #8fa6aa;padding:13px 14px 15px}
+.stat.accent{border-top-color:#c0573f}
+.stat .s-label{font-size:12px;line-height:1.5;color:#65777f}
+.stat .s-value{font-size:30px;font-weight:700;line-height:1.2;margin:6px 0 3px;color:#26343e;font-variant-numeric:tabular-nums}
+.stat .s-value span{font-size:14px;font-weight:600;color:#6a747b;margin-left:1px}
+.stat.accent .s-value{color:#a8402c}
+.stat .s-foot{font-size:11.5px;color:#788087}
+
+/* ---------- 主体 ---------- */
+section.content-section{padding:0 0 32px;scroll-margin-top:24px}
+h2{font-size:25px;line-height:1.5;color:#263e49;padding:18px 0 12px;border-bottom:1px solid #c8ced0;margin:40px 0 22px}
+h2 .no{color:#26716b;font-weight:700;margin-right:12px;font-variant-numeric:tabular-nums}
+h3{font-size:19px;line-height:1.65;margin:32px 0 13px;font-weight:700;color:#26343e}
+p{margin:14px 0}
+.lead-in{color:#4c565b}
+.small{font-size:13px;color:#6a747b}
+
+/* ---------- 表格 ---------- */
+.table-wrap{overflow-x:auto;margin:20px 0 10px}
+table{width:100%;border-collapse:collapse;font-size:14.5px;line-height:1.65}
+caption{caption-side:top;text-align:left;font-size:12.5px;color:#6a747b;padding-bottom:9px;line-height:1.6}
+th{text-align:left;font-weight:700;font-size:12.5px;letter-spacing:.4px;color:#4d5c63;padding:0 12px 9px 0;border-bottom:2px solid #a9b6b9;white-space:nowrap;vertical-align:bottom}
+td{padding:11px 12px 11px 0;border-bottom:1px solid #dde2e0;vertical-align:top}
+td:last-child,th:last-child{padding-left:14px;padding-right:0}
+tbody tr:hover td{background:#faf8f2}
+.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;font-family:"Cascadia Mono",Consolas,ui-monospace,monospace;font-size:13.5px}
+th.num{text-align:right}
+td.name{font-weight:700;white-space:nowrap;color:#2b3b42}
+.sub{display:block;font-size:11.5px;color:#788087;font-weight:400;margin-top:2px;white-space:nowrap}
+
+/* ---------- 徽章 ---------- */
+.badge{display:inline-block;font-size:11.5px;line-height:1.65;padding:1px 8px;border-radius:3px;white-space:nowrap;vertical-align:1px}
+.b-data{color:#276756;background:#dcece6}
+.b-est{color:#34547a;background:#e6edf6}
+.b-warn{color:#9a493d;background:#f1ded8}
+.b-plain{color:#5b666c;background:#e9e7e0}
+
+/* ---------- 提示块 ---------- */
+.note{font-size:13.5px;background:#e9eef0;padding:16px 20px;color:#4b5a60;border-radius:2px;margin:22px 0}
+.note .n-t{display:block;font-size:11.5px;letter-spacing:1.5px;font-weight:700;color:#4d6b74;margin-bottom:5px}
+.note b{color:#252a2e}
+.terms{background:#fffdf8;border-left:4px solid #b09a71;margin:24px 0;padding:15px 24px;font-size:14px;color:#4c565b}
+.terms b{color:#252a2e}
+.terms .n-t{display:block;font-size:11.5px;letter-spacing:1.5px;font-weight:700;color:#8a744a;margin-bottom:6px}
+
+/* ---------- 公式 ---------- */
+.formula{background:#fffdf9;border:1px solid #d6dce0;padding:20px;margin:22px 0;text-align:center}
+.formula .f{font-size:17px;letter-spacing:.5px;color:#26343e}
+.formula .f .op{color:#8a969b;padding:0 5px}
+.formula .f em{font-style:normal;color:#1f5e59;font-weight:700}
+.formula .f-note{font-size:12.5px;color:#6a747b;margin-top:8px}
+
+/* ---------- 漏斗 ---------- */
+.funnel{margin:22px 0 6px}
+.f-row{display:grid;grid-template-columns:132px 1fr;gap:16px;align-items:center;padding:12px 0;border-bottom:1px dashed #d5dad7}
+.f-row:last-child{border-bottom:none}
+.f-name{font-size:13.5px;font-weight:700;line-height:1.45;color:#2b3b42}
+.f-name span{display:block;font-size:11.5px;color:#788087;font-weight:400}
+.steps{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.step{flex:1;min-width:78px;background:#f1eee7;padding:9px 11px;border-left:2px solid #cfc9bc}
+.step b{display:block;font-size:20px;font-weight:700;line-height:1.25;color:#26343e;font-variant-numeric:tabular-nums;font-family:"Cascadia Mono",Consolas,ui-monospace,monospace}
+.step i{display:block;font-style:normal;font-size:11px;color:#788087;letter-spacing:.5px;margin-top:2px}
+.step.s1{border-left-color:#a9bfa9;background:#f0f4ec}
+.step.s2{border-left-color:#d3c193;background:#f7f2e7}
+.step.s3{border-left-color:#c0573f;background:#faeee9}
+.arrow{color:#c0bbae;font-size:13px;flex:0 0 auto}
+
+/* ---------- 条形图 ---------- */
+.chart{margin:22px 0 6px}
+.bar-row{display:grid;grid-template-columns:158px 1fr 88px;align-items:center;gap:14px;padding:7px 0}
+.b-label{font-size:13.5px;font-weight:700;line-height:1.4;color:#2b3b42}
+.b-label span{display:block;font-size:11.5px;color:#788087;font-weight:400}
+.track{height:12px;background:#e9e6de;position:relative}
+.fill{height:100%;background:#5c8f92}
+.fill.alt{background:#c0573f}
+.b-val{text-align:right;font-size:13.5px;font-weight:700;font-family:"Cascadia Mono",Consolas,monospace;font-variant-numeric:tabular-nums}
+
+/* ---------- 案例卡 ---------- */
+.case{--accent:#56769c;--tint:#e6edf6;background:#fffdf9;border:1px solid #d6dce0;border-left:7px solid var(--accent);padding:22px 26px;margin:26px 0 30px;box-shadow:0 2px 7px #263e4908;scroll-margin-top:20px}
+.case-top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 0 13px;border-bottom:1px solid #dce0e2}
+.case-badge{font-size:14px;line-height:1.6;font-weight:700;color:var(--accent);background:var(--tint);padding:4px 12px;border:1px solid var(--accent);border-radius:4px}
+.case-number{font-size:12.5px;letter-spacing:1px;color:#75808a;white-space:nowrap;font-variant-numeric:tabular-nums}
+.case h3{margin:16px 0 12px;font-size:21px}
+.kv{display:grid;grid-template-columns:88px 1fr;gap:4px 14px;margin:8px 0 12px;font-size:14px}
+.kv dt{color:#788087}
+.kv dd{margin:0;color:#2b3b42}
+.case p{margin:10px 0;font-size:14.5px;color:#4c565b}
+.case p:last-child{margin-bottom:0}
+
+/* ---------- 误读列表 ---------- */
+ol.mis{margin:16px 0 0;padding:0;list-style:none;counter-reset:m}
+ol.mis li{counter-increment:m;position:relative;padding:14px 0 14px 48px;border-bottom:1px solid #dde2e0;font-size:14.5px;color:#4c565b}
+ol.mis li:last-child{border-bottom:none}
+ol.mis li::before{content:counter(m,decimal-leading-zero);position:absolute;left:0;top:15px;font-family:"Cascadia Mono",Consolas,monospace;font-size:12px;color:#a8402c;border:1px solid #d8b3a8;padding:0 5px;line-height:1.6}
+ol.mis b{display:block;color:#252a2e;margin-bottom:1px}
+
+/* ---------- 参考 ---------- */
+.sources{font-size:13px;line-height:1.9;color:#4c565b;margin:0;padding-left:20px}
+.sources li{margin-bottom:5px}
+.sources a{overflow-wrap:anywhere}
+.foot{border-top:1px solid #c8d0cd;margin-top:44px;padding:20px 0 4px;font-size:12.5px;line-height:1.95;color:#718079}
+.foot p{margin:5px 0}
+.foot a{color:#32677c;text-decoration:none;border-bottom:1px solid #c8d0cd}
+.foot a:hover{color:#26716b;border-color:#26716b;text-decoration:none}
+
+/* ---------- 响应式 ---------- */
+@media(max-width:980px){
+  .top-progress{display:block}
+  .shell{grid-template-columns:minmax(0,1fr);gap:0;padding:24px 20px 56px}
+  .rail{position:static;height:auto;overflow:visible}
+  .rail .brand{font-size:19px;padding-bottom:12px;letter-spacing:1px}
+  .rail nav{display:flex;flex-wrap:wrap;gap:5px 6px;margin-top:12px}
+  .rail nav a{margin:0;padding:5px 10px;border:1px solid #d5dad7;border-radius:999px;font-size:12px}
+  .rail nav a::before{display:none}
+  .rail nav a.active{border-color:#26716b}
+  .rail nav a.visited{color:#446b68}
+  .reading-status{margin-top:14px;padding:12px 0;border-top:none}
+  .current-case{display:none}
+  .hero{padding-top:8px}
+  .hero h1{font-size:30px;letter-spacing:1px}
+  .hero .lead{font-size:16.5px}
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .stat:last-child{grid-column:1/-1}
+  .f-row{grid-template-columns:1fr;gap:8px}
+  .bar-row{grid-template-columns:112px 1fr 74px;gap:9px}
+  .case{padding:18px 16px;border-left-width:6px}
+  .case h3{font-size:19px}
+  .kv{grid-template-columns:1fr}
+  .kv dt{font-size:12px;color:#8a949a}
+}
+@media(max-width:520px){
+  .stats{grid-template-columns:1fr}
+  .stat:last-child{grid-column:auto}
+  .hero h1{font-size:27px}
+  .step{min-width:68px;padding:8px}
+  .step b{font-size:17px}
+}
+
+/* ---------- 打印 ---------- */
+@media print{
+  @page{size:A4;margin:14mm}
+  body{background:#fff;font-size:10.5pt}
+  .rail,.top-progress{display:none}
+  .shell{display:block;max-width:none;padding:0}
+  section.content-section{break-inside:auto}
+  h2,h3{break-after:avoid}
+  .case,.note,.terms,.formula{break-inside:avoid;box-shadow:none}
+  .hero{border-bottom-width:2px}
+  .hero h1{font-size:25pt}
+  a{color:inherit;text-decoration:none}
+  thead{display:table-header-group}
+  .case-badge,.badge,.stat{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+
+/* ---------- 列表与徽章（本页统一样式） ---------- */
+.content-section ul{margin:10px 0 18px;padding-left:1.25em;list-style:square}
+.content-section ul li{margin-bottom:6px}
+.content-section ul li::marker{color:var(--accent)}
+.content-section .note ol.mis{margin-top:6px}
+.badge.b-high{background:#fdecea;color:#b3261e}
+.badge.b-mid{background:#fff4e0;color:#a35a00}
+.badge.b-low{background:#e8f5ec;color:#1e7a3d}
+</style>
+</head>
+<body>
+
+<div class="top-progress" aria-hidden="true"><div id="topFill"></div></div>
+
+<div class="shell">
+
+  <aside class="rail">
+    <div class="brand">UE 5.8 开发建议<small>2026 · 技术战略报告</small></div>
+    <nav aria-label="文章目录">
+      <a href="#introduction" data-section="introduction" data-label="导语">导语</a>
+      <a href="#s1" data-section="s1" data-label="01 摘要与判断">01 摘要与判断</a>
+      <a href="#s2" data-section="s2" data-label="02 现实校准">02 现实校准</a>
+      <a href="#s3" data-section="s3" data-label="03 版本决策">03 版本决策</a>
+      <a href="#s4" data-section="s4" data-label="04 项目定义">04 项目定义</a>
+      <a href="#s5" data-section="s5" data-label="05 技术选型">05 技术选型</a>
+      <a href="#s6" data-section="s6" data-label="06 美术管线">06 美术管线</a>
+      <a href="#s7" data-section="s7" data-label="07 音频设计">07 音频设计</a>
+      <a href="#s8" data-section="s8" data-label="08 AI 协作">08 AI 协作</a>
+      <a href="#s9" data-section="s9" data-label="09 成本清单">09 成本清单</a>
+      <a href="#s10" data-section="s10" data-label="10 计划模板">10 计划模板</a>
+      <a href="#s11" data-section="s11" data-label="11 风险登记">11 风险登记</a>
+      <a href="#s12" data-section="s12" data-label="12 行动清单">12 行动清单</a>
+    </nav>
+    <div class="reading-status">
+      <div class="progress-line"><span id="readingPosition">导语</span><strong id="readingPercent">0%</strong></div>
+      <div id="readingBar" class="progress-track" role="progressbar" aria-label="阅读进度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="readingFill" class="progress-fill"></div></div>
+      <div id="casePosition" class="current-case" hidden></div>
+    </div>
+    <a class="backlink" href="../../">← 全部文章</a>
+  </aside>
+
+  <main>
+
+    <!-- ================= 导语 ================= -->
+    <header id="introduction" class="hero content-section">
+      <div class="eyebrow">技术战略报告 · 2026</div>
+      <h1>Unreal Engine 5.8<br><strong>游戏开发建议报告</strong></h1>
+      <p class="lead">面向中小团队与独立开发者的技术选型、生产节奏与 AI 工具链评估。</p>
+      <p>本报告基于 Unreal Engine 5.8 的官方发布信息与当前生产实践，给出引擎版本、技术选型、内容规模、美术管线与 AI 工具链五个方面的建议。</p>
+      <div class="meta">
+        <div><b>编制</b>　DeepSeek</div>
+        <div><b>版本</b>　v1.0</div>
+        <div><b>日期</b>　2026 年 11 月</div>
+        <div><b>阅读</b>　约 15 分钟</div>
+      </div>
+    </header>
+
+    <!-- ================= 01 ================= -->
+    <section id="s1" class="content-section">
+      <h2><span class="no">01</span>摘要与核心判断</h2>
+
+      <p>先说结论，再谈依据。</p>
+
+      <div class="note">
+        <span class="n-t">五条核心判断</span>
+        <ol class="mis">
+          <li><b>现在就锁定 5.8 进入生产。</b>它是 UE5 路线图上最后一个计划内大版本，等待 UE6 的机会成本远高于未来升级的成本。</li>
+          <li><b>「完成度」是密度、一致性与边界完整性的乘积，不是内容时长。</b>中小团队应把范围压缩到「每一分钟都成立」。</li>
+          <li><b>动画与关卡美术是最大成本项。</b>风格化美术、动作重定向与无标记动捕，是当前性价比最高的降本组合。</li>
+          <li><b>战斗系统应做到「数据驱动、代码薄、参数外置」。</b>Gameplay Ability System 不是默认答案。</li>
+          <li><b>AI 已经能进入编辑器内部（Unreal MCP），但应定位为加速器与校对器，而不是决策者。</b></li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- ================= 02 ================= -->
+    <section id="s2" class="content-section">
+      <h2><span class="no">02</span>现实校准：对标作品与成本结构</h2>
+
+      <p>被频繁引用的三款作品，代表了三种不同的成本结构。它们的共同点是团队规模、开发周期与内容体量都远超个人项目，直接复制「完成度」并不现实；但可以拆解出各自真正值得借鉴的部分。</p>
+
+      <div class="table-wrap">
+        <table>
+          <caption>表 1　三款对标作品的成本结构</caption>
+          <thead>
+            <tr><th>作品</th><th>团队 / 周期</th><th>一周目体量</th><th>值得借鉴的部分</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="name">无限机兵</td><td>约 30 人 / 5 年</td><td class="num">20–25 小时</td><td>小团队如何用风格化美术换取成本空间</td></tr>
+            <tr><td class="name">明末：渊虚之羽</td><td>100 人以上 / 4 年以上</td><td class="num">30 小时以上</td><td>关卡密度与区域节奏的结构设计</td></tr>
+            <tr><td class="name">影之刃零</td><td>100 人以上 / 5 年以上</td><td class="num">—</td><td>战斗表现力的上限，由手 K 动画与演出堆出</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>真正与中小团队同量级的对标，是《记忆边境》《致命躯壳》《Furi》《九日》这类 10–30 人、3–4 小时的高密度作品。它们的共同特征是：<strong>内容很短，但每一场战斗都被反复打磨过</strong>。这才是个人或小队应当瞄准的坐标系。</p>
+
+      <p>成本结构上，动作游戏的开销大致遵循一个顺序：<strong>动画 &gt; 关卡美术 &gt; 音频 &gt; 系统与工具 &gt; 文本与本地化</strong>。程序与数值其实是相对可控的部分，真正决定项目能否完成的是动画产能与美术外包管理。</p>
+    </section>
+
+    <!-- ================= 03 ================= -->
+    <section id="s3" class="content-section">
+      <h2><span class="no">03</span>引擎现状与版本决策</h2>
+
+      <h3>5.8 的定位</h3>
+      <p>Unreal Engine 5.8 于 2026 年 6 月 23 日发布。Epic 明确表示，这是 UE5 路线图上最后一个计划内大版本，后续将以缺陷修复与回归为主，研发重心转向 UE6。这意味着 5.8 会成为未来两到三年最稳定的生产基线，而 UE6 发布之后仍会有较长的迁移窗口。</p>
+      <p>对项目的直接结论是：<strong>不要把立项时间押在 UE6 上</strong>。引擎版本带来的收益，通常远小于晚一年进入市场、晚一年积累内容的风险。</p>
+
+      <h3>已生产就绪、可直接采用</h3>
+      <div class="table-wrap">
+        <table>
+          <caption>表 2　5.8 中已生产就绪的能力</caption>
+          <thead>
+            <tr><th>能力</th><th>状态</th><th>对项目的意义</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="name">MegaLights</td><td>生产就绪</td><td>大量动态光源的性能与噪声问题基本解决，夜景与室内布光不再依赖大量烘焙妥协</td></tr>
+            <tr><td class="name">Lumen Lite</td><td>Beta</td><td>全局光照成本约为高质量模式的一半，是 60fps 的关键开关，已作为本世代掌机的默认路径</td></tr>
+            <tr><td class="name">MetaHuman Animator 无标记动捕</td><td>已发布</td><td>单台普通摄像头即可捕捉面部与全身表演，显著降低过场与对话动画的门槛</td></tr>
+            <tr><td class="name">Live Link Hub</td><td>生产就绪</td><td>多设备动捕集中同步与录制，适合小型动捕棚</td></tr>
+            <tr><td class="name">Movie Render Graph</td><td>生产就绪</td><td>过场动画与宣传片的渲染管线</td></tr>
+            <tr><td class="name">Control Rig Physics</td><td>Beta</td><td>布娃娃、衣摆与次级运动，减少手工关键帧</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>实验性能力：值得评估，不宜押注</h3>
+      <div class="table-wrap">
+        <table>
+          <caption>表 3　实验性能力与适用边界</caption>
+          <thead>
+            <tr><th>能力</th><th>说明</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="name">Mesh Terrain / PVE</td><td>三维网格地形与程序化植被编辑，面向大世界；小体量线性关卡收益有限。</td></tr>
+            <tr><td class="name">Direct Mesh Controls</td><td>直接在骨骼网格表面操作绑定，改善面部与过场动画效率，接口仍可能变化。</td></tr>
+            <tr><td class="name">Substrate Toon Shading</td><td>内置非真实感渲染，适合风格化项目验证；生产期建议仍以成熟的自定义光照模型或后处理描边为主。</td></tr>
+            <tr><td class="name">Animation Mixing</td><td>在 Sequencer 内混合与遮罩动画层，减少对动画蓝图与 Slot 的依赖。</td></tr>
+            <tr><td class="name">MetaHuman Collections</td><td>人群与远景角色的规模化方案，可在高保真角色与实例化网格之间切换。</td></tr>
+            <tr><td class="name">Unreal MCP</td><td>把编辑器能力暴露给 AI 代理，详见第 8 章。</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>版本策略建议</h3>
+      <ul>
+        <li>生产主线锁定 5.8，建立稳定分支；实验特性只在独立分支验证，通过后再合入。</li>
+        <li>每两到三个小版本做一次升级评估，升级前必须跑完整回归清单：加载、存档兼容、动画重定向、材质编译、打包体积、目标机型帧率。</li>
+        <li>架构上避免深度绑定可能被替换的子系统，尤其是动画与渲染管线相关部分。</li>
+      </ul>
+    </section>
+
+    <!-- ================= 04 ================= -->
+    <section id="s4" class="content-section">
+      <h2><span class="no">04</span>项目定义：把完成度变成指标</h2>
+
+      <h3>三个维度</h3>
+      <p>玩家感知到的「完成度」，通常来自三件事，而不是内容总量。</p>
+      <ul>
+        <li><strong>密度</strong>：单位时间内的有效体验——遭遇、演出、成长反馈、探索回报。</li>
+        <li><strong>一致性</strong>：所有系统共享同一套规则与表现标准，不出现「这一关像另一个游戏」。</li>
+        <li><strong>边界完整性</strong>：菜单、存档、设置、手柄、本地化、加载时间、崩溃率。这些不产生乐趣，但缺失会直接摧毁「完成」的感受。</li>
+      </ul>
+      <p>三者之中，密度最贵，边界最便宜也最容易被忽视。建议在项目早期就把边界项写进里程碑，而不是留到「最后再说」。</p>
+
+      <h3>体量参考</h3>
+      <p>以下为经验值，假设美术与动画有外部支持，且不含发行与本地化的完整周期。</p>
+      <div class="table-wrap">
+        <table>
+          <caption>表 4　按团队规模给出的体量参考</caption>
+          <thead>
+            <tr><th>团队规模</th><th class="num">建议体量</th><th class="num">周期</th><th>内容参考</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="name">1–3 人</td><td class="num">2–4 小时</td><td class="num">18–30 个月</td><td>1 把武器、5–7 种敌人、2 个 Boss、3 个区域</td></tr>
+            <tr><td class="name">4–8 人</td><td class="num">5–8 小时</td><td class="num">24–36 个月</td><td>2 把武器、8–12 种敌人、3–4 个 Boss、5 个区域</td></tr>
+            <tr><td class="name">10–20 人</td><td class="num">10–15 小时</td><td class="num">36–48 个月</td><td>中体量类魂或动作冒险</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>垂直切片</h3>
+      <p>用三到六个月做出十到十五分钟「可发布品质」的片段。它的作用不是演示，而是验证：验证战斗循环是否成立、验证美术方向是否可复制、验证团队产能是否支撑目标体量。</p>
+      <p>切片必须闭合，至少包含：一次完整战斗、一次死亡与重生、一次成长或收集、一个 Boss、菜单与存档。缺少任何一项，切片的结论都不可信。</p>
+    </section>
+
+    <!-- ================= 05 ================= -->
+    <section id="s5" class="content-section">
+      <h2><span class="no">05</span>技术选型建议</h2>
+
+      <h3>渲染与性能</h3>
+      <p>动作游戏以稳定 60fps 为基线，先定预算再定画面。建议按 CPU 8ms、GPU 12ms 规划，并为特效与多人同屏预留余量。</p>
+      <ul>
+        <li>Lumen Lite 与 MegaLights 组合，可在中端 PC 上达到 60fps；高配再开放高质量档。</li>
+        <li>Nanite 用于静态环境；骨骼网格启用 Nanite 前必须实测，成本与兼容性仍需评估。</li>
+        <li>TSR 作为默认上采样；DLSS、FSR 作为可选档位。</li>
+        <li>提供三档画质预设，并在选项中暴露阴影、全局光照、体积雾、抗锯齿等关键项。</li>
+        <li>从第一天建立性能基线场景，每个迭代周期跑一次，避免「最后再优化」。</li>
+      </ul>
+
+      <h3>动画：最大的成本项</h3>
+      <p>对动作游戏而言，动画产能往往比程序更早成为瓶颈。建议组合使用以下手段。</p>
+      <ul>
+        <li><strong>移动</strong>：采用 Motion Matching，官方 Game Animation Sample 可作为可直接改造的起点。</li>
+        <li><strong>战斗</strong>：动画蒙太奇配合 Slot 与分层；用动画曲线驱动位移、无敌帧与取消窗口，而不是把逻辑写死在蓝图里。</li>
+        <li><strong>重定向</strong>：5.8 的 Foot Definition 与 Retarget Override Sets 显著降低多角色、不同体型的适配成本。</li>
+        <li><strong>动捕</strong>：MetaHuman Animator 的无标记方案适合表演、对话与过场；高精度战斗动作仍建议专业动捕或手工关键帧。</li>
+        <li><strong>次级运动</strong>：Control Rig Physics 与 Control Rig Dynamics 可处理衣摆、头发与配饰，减少手工工作量。</li>
+      </ul>
+
+      <h3>战斗系统</h3>
+      <p>中小团队优先选择「自研轻量状态机 + 数据资产」，而不是默认引入 Gameplay Ability System。GAS 的优势在联机复制、复杂 Buff 与技能树；代价是学习曲线、调试难度，以及对精确帧数据的不友好。只有当项目确实需要联机或大量技能组合时，才值得承担这部分复杂度。</p>
+      <p>一次攻击建议以数据资产描述，字段至少包括：动画、前摇 / 判定 / 后摇帧区间、伤害、削韧、硬直等级、位移曲线、取消窗口、顿帧时长、命中音效、特效与震屏参数。<strong>把参数全部外置，并提供运行时调试面板</strong>，是提升手感迭代效率最有效的手段。</p>
+      <p>命中判定建议使用动画通知状态配合武器轨迹的多点扫描，而不是单纯依赖物理资产重叠——后者在高速攻击下容易漏判与抖动。</p>
+
+      <h3>AI 与关卡</h3>
+      <ul>
+        <li>敌人行为以 StateTree 为主；Boss 可使用专用状态机，以获得更精确的节奏控制。</li>
+        <li>需要成群敌人时，用 Mass 与导航网格配合；不需要就不要引入。</li>
+        <li>关卡使用 World Partition 与 Data Layer 管理；PCG 负责植被与装饰，战斗空间仍应手工打磨。</li>
+      </ul>
+
+      <h3>输入、相机与界面</h3>
+      <ul>
+        <li>Enhanced Input 配合输入缓冲（约 150–300ms）与取消窗口，是动作游戏手感的基础。</li>
+        <li>锁定系统用屏幕中心评分，综合角度、距离与遮挡检测，避免「锁到背后敌人」。</li>
+        <li>界面使用 CommonUI；避免每帧 Tick 的 UMG，列表类界面务必做虚拟化。</li>
+      </ul>
+
+      <h3>存档、设置、本地化与可访问性</h3>
+      <p>这些系统不产生乐趣，但决定产品是否「像一个完整的产品」。建议在垂直切片阶段就完成最小可用版本。</p>
+      <ul>
+        <li>存档带版本号与迁移逻辑，避免更新后玩家进度损坏。</li>
+        <li>设置项持久化，包含画面、音频、按键、字幕与色盲选项。</li>
+        <li>本地化使用 String Table 与 CSV 往返，避免硬编码文本。</li>
+        <li>手柄热插拔、窗口焦点切换、多分辨率适配，都应在早期验证。</li>
+      </ul>
+
+      <h3>网络与构建</h3>
+      <p>单人项目不要引入网络复制。若确有联机规划，必须在架构期决定，后期补做是灾难性的。构建侧建议用脚本封装 BuildCookRun，建立每日构建与产物归档，并提前配置崩溃符号上传与 Steam 分支。</p>
+    </section>
+
+    <!-- ================= 06 ================= -->
+    <section id="s6" class="content-section">
+      <h2><span class="no">06</span>美术与资产管线</h2>
+
+      <h3>美术方向</h3>
+      <p>美术风格是成本的第一决定因素。写实路线意味着更高的模型面数、材质复杂度、动画精度与灯光要求；风格化路线可以用更低的成本获得更高的辨识度。对中小团队，<strong>风格化不是妥协，而是正确的商业选择</strong>。</p>
+      <p>如果选择非真实感渲染，可用 Substrate Toon 做早期验证，但生产期建议使用成熟的自定义光照模型或后处理描边，避免被实验特性绑定。</p>
+
+      <h3>资产来源</h3>
+      <ul>
+        <li><strong>Fab</strong>：Quixel Megascans、Megaplants 与各类环境资产，是灰盒与场景填充的主力。</li>
+        <li><strong>MetaHuman</strong>：高质量数字人，配合 MetaHuman Animator 可快速产出对话与过场。</li>
+        <li><strong>官方示例</strong>：Zebra Character Sample 包含完整的面部与身体绑定、物理绑定，可作为角色管线参考。</li>
+        <li><strong>AI 生成 3D</strong>：适合概念与灰盒，进入生产前必须重新拓扑、重做 UV 与材质，不能直接使用。</li>
+      </ul>
+
+      <h3>外包管理</h3>
+      <p>外包失控通常不是质量问题，而是规格问题。每份外包都应附带规格书：面数预算、材质槽数量、骨骼命名、碰撞体、LOD 层级、贴图尺寸与打包方式；以及验收清单与版本回收流程。用脚本在导入时自动校验命名与规格，比事后返工便宜得多。</p>
+    </section>
+
+    <!-- ================= 07 ================= -->
+    <section id="s7" class="content-section">
+      <h2><span class="no">07</span>音频设计</h2>
+
+      <p>动作游戏的音频不是背景，而是打击感的一部分。</p>
+      <ul>
+        <li>中间件按团队规模选择：Wwise 或 FMOD 适合复杂交互；团队较小时 MetaSounds 也能覆盖大部分需求。</li>
+        <li>命中音效按材质与力度分层，与战斗帧数据同源，避免音画不同步。</li>
+        <li>敌人语音使用状态机管理，确保受击、警戒、死亡等状态切换自然。</li>
+        <li>音乐采用横向过渡与分层，而不是简单的淡入淡出。</li>
+      </ul>
+    </section>
+
+    <!-- ================= 08 ================= -->
+    <section id="s8" class="content-section">
+      <h2><span class="no">08</span>工具链与 AI 协作</h2>
+
+      <h3>引擎内：Unreal MCP</h3>
+      <p>5.8 引入了实验性的 Unreal MCP：在编辑器进程内嵌入 MCP 服务器，任何兼容 MCP 的 AI 客户端都可以通过本地 HTTP 连接，调用编辑器能力——生成 Actor、配置灯光、创建材质实例、检查界面控件、运行自动化测试。</p>
+      <ul>
+        <li><strong>扩展方式</strong>：通过 Toolset Registry 编写工具集，Python 优先，C++ 用于高性能或需要反射类型的场景。</li>
+        <li><strong>安全边界</strong>：默认仅监听本机、无身份验证，不可暴露到局域网或公网；实验接口随时可能变化。</li>
+        <li><strong>落地建议</strong>：只在分支或工程副本上允许 AI 操作资产，所有变更走版本控制评审；不要让 AI 直接修改生产关卡。</li>
+      </ul>
+      <p>同版本还提供内容浏览器的语义搜索，以及 PCG 与 LLM 结合的辅助工作流，对大型项目的资产检索与灰盒搭建有明显帮助。</p>
+
+      <h3>引擎外：代码、数据与文档</h3>
+      <ul>
+        <li><strong>代码</strong>：C++ 模块、Python 编辑器脚本、命令行烘焙与自动化测试。</li>
+        <li><strong>数据</strong>：Excel / CSV 与 DataTable 的双向管线，数值模拟与参数扫掠。</li>
+        <li><strong>文档</strong>：设计文档、系统拆解、本地化表、验收清单。</li>
+      </ul>
+
+      <h3>能力边界</h3>
+      <p>需要明确区分两类工作，并把边界写进团队规范，比争论「AI 能不能做游戏」更有意义。</p>
+      <div class="table-wrap">
+        <table>
+          <caption>表 5　AI 的能力边界</caption>
+          <thead>
+            <tr><th>适合交给 AI</th><th>不建议交给 AI</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>重复劳动与样板代码</td><td>手感判断与打击感调校</td></tr>
+            <tr><td>数据整理、表格生成与校验</td><td>美术与表演的审美决策</td></tr>
+            <tr><td>文档初稿、拆解与检索</td><td>试玩反馈与难度曲线裁决</td></tr>
+            <tr><td>回归检查、日志归类</td><td>动画表演设计</td></tr>
+            <tr><td>资产命名与规格校验</td><td>关卡节奏的最终拍板</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>团队落地</h3>
+      <ul>
+        <li>指定 AI 工具负责人，维护工具集、提示词与失败案例库。</li>
+        <li>建立产出评审规范：代码评审、资产差异检查、构建验证。</li>
+        <li>先用低风险任务建立信任，再逐步扩大权限。</li>
+      </ul>
+    </section>
+
+    <!-- ================= 09 ================= -->
+    <section id="s9" class="content-section">
+      <h2><span class="no">09</span>外部工具与成本清单</h2>
+
+      <p>下表为粗略区间，随地区、渠道与汇率波动，仅用于做预算量级判断。</p>
+
+      <div class="table-wrap">
+        <table>
+          <caption>表 6　外部工具与参考成本（人民币）</caption>
+          <thead>
+            <tr><th>领域</th><th>推荐方案</th><th>参考成本</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="name">角色建模与贴图</td><td>Blender + Substance 3D，或直接外包</td><td>外包 5k–30k / 角色；软件订阅 1.5k–3k / 年</td></tr>
+            <tr><td class="name">场景资产</td><td>Fab（Megascans、Megaplants）、kitbash 包</td><td>单品 100–1,000；环境包 2k–20k</td></tr>
+            <tr><td class="name">战斗动画</td><td>Cascadeur、动画包，或外包</td><td>外包 300–2,000 / 条；Cascadeur Pro 约 1.5k–2k 买断</td></tr>
+            <tr><td class="name">动作捕捉</td><td>MetaHuman Animator 单摄像头方案、动捕服、动捕棚</td><td>软件随引擎；动捕服约 18k；棚租按天计</td></tr>
+            <tr><td class="name">音频</td><td>Wwise 或 FMOD + 素材包</td><td>中间件对中小收入免费；素材包 200–2,000</td></tr>
+            <tr><td class="name">版本管理</td><td>Git + LFS，或 Perforce Helix Core</td><td>自建免费；Perforce 5 用户内免费</td></tr>
+            <tr><td class="name">本地化</td><td>机翻初稿 + 人工校对</td><td>约 0.1–0.3 / 字</td></tr>
+            <tr><td class="name">发行与物料</td><td>Steamworks、预告片外包</td><td>上架费 100 美元 / 款；预告片 3k–30k</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ================= 10 ================= -->
+    <section id="s10" class="content-section">
+      <h2><span class="no">10</span>生产计划模板</h2>
+
+      <p>下表给出一个可复用的阶段划分，适用于 2–4 小时体量的动作游戏。</p>
+
+      <div class="table-wrap">
+        <table>
+          <caption>表 7　生产阶段与通过标准</caption>
+          <thead>
+            <tr><th>阶段</th><th class="num">周期</th><th>交付物</th><th>通过标准</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="name">阶段 0　技术验证</td><td class="num">2–4 周</td><td>可运行原型</td><td>移动、锁定、一次攻击命中的完整闭环</td></tr>
+            <tr><td class="name">阶段 1　战斗核心</td><td class="num">2–3 个月</td><td>垂直切片 v0.1</td><td>1 把武器全招式、2 种敌人、1 个 Boss</td></tr>
+            <tr><td class="name">阶段 2　关卡与循环</td><td class="num">2–3 个月</td><td>切片 v0.5</td><td>1 个区域、6–8 场遭遇、检查点与经济循环</td></tr>
+            <tr><td class="name">阶段 3　内容扩充</td><td class="num">4–8 个月</td><td>Alpha</td><td>全部内容可从头到尾通关</td></tr>
+            <tr><td class="name">阶段 4　打磨与发行</td><td class="num">3–6 个月</td><td>Beta / RC</td><td>崩溃率、帧率、本地化、商店页与合规</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ================= 11 ================= -->
+    <section id="s11" class="content-section">
+      <h2><span class="no">11</span>风险登记</h2>
+
+      <div class="table-wrap">
+        <table>
+          <caption>表 8　风险登记表</caption>
+          <thead>
+            <tr><th>风险</th><th>影响</th><th>概率</th><th>缓解措施</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="name">范围蔓延</td><td><span class="badge b-high">高</span></td><td><span class="badge b-high">高</span></td><td>冻结特性列表，双周评审；新增需求必须置换等量旧需求</td></tr>
+            <tr><td class="name">动画产能不足</td><td><span class="badge b-high">高</span></td><td><span class="badge b-high">高</span></td><td>重定向、动捕、外包三线并行，提前 6 个月锁定排期</td></tr>
+            <tr><td class="name">性能不达标</td><td><span class="badge b-mid">中</span></td><td><span class="badge b-mid">中</span></td><td>早期建立基线，每迭代实测，预留优化缓冲</td></tr>
+            <tr><td class="name">原型代码进入生产</td><td><span class="badge b-high">高</span></td><td><span class="badge b-mid">中</span></td><td>阶段 1 结束做一次结构性重构，设定代码准入标准</td></tr>
+            <tr><td class="name">引擎升级破坏兼容</td><td><span class="badge b-mid">中</span></td><td><span class="badge b-low">低</span></td><td>锁定版本，分支验证，升级前跑回归清单</td></tr>
+            <tr><td class="name">AI 工具误改资产</td><td><span class="badge b-mid">中</span></td><td><span class="badge b-mid">中</span></td><td>分支隔离、评审、每日备份</td></tr>
+            <tr><td class="name">发行与合规</td><td><span class="badge b-high">高</span></td><td><span class="badge b-mid">中</span></td><td>提前确认目标市场、分级与发行资质要求</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ================= 12 ================= -->
+    <section id="s12" class="content-section">
+      <h2><span class="no">12</span>结论与行动清单</h2>
+
+      <p>UE 5.8 已经把「做出高品质画面」的门槛降到了历史低点，真正的门槛回到了内容密度、动画产能与项目管理。对中小团队而言，正确的策略不是把游戏做大，而是<strong>把范围做小、把密度做高、把边界做全</strong>。</p>
+      <p>建议的行动节奏如下。</p>
+      <ul>
+        <li><strong>30 天</strong>：锁定 5.8 工程模板与命名规范，建立版本控制与性能基线场景，明确垂直切片的范围与验收标准。</li>
+        <li><strong>90 天</strong>：完成阶段 0 与阶段 1，产出可玩的垂直切片，同时建立数据驱动的战斗管线与 AI 辅助工具链。</li>
+        <li><strong>180 天</strong>：完成一个区域的完整循环，进行第一次外部试玩，依据反馈决定是扩充内容还是调整方向。</li>
+      </ul>
+
+      <h3>参考资料</h3>
+      <ol class="sources">
+        <li>Epic Games，《Unreal Engine 5.8 Release Notes》。<a href="https://dev.epicgames.com/documentation/unreal-engine/unreal-engine-5-8-release-notes" target="_blank" rel="noopener noreferrer">dev.epicgames.com</a></li>
+        <li>Epic Games，《Unreal Engine 5.8 is now available》，2026 年。<a href="https://www.unrealengine.com/news/unreal-engine-5-8-is-now-available" target="_blank" rel="noopener noreferrer">unrealengine.com</a></li>
+        <li>Epic Games，《Unreal MCP in Unreal Editor》。<a href="https://dev.epicgames.com/documentation/unreal-engine/unreal-mcp-in-unreal-editor" target="_blank" rel="noopener noreferrer">dev.epicgames.com</a></li>
+        <li>Epic Games，《AI Features, Tools, and Plugins in Unreal Engine》。<a href="https://dev.epicgames.com/documentation/unreal-engine/ai-features-tools-and-plugins-in-unreal-engine" target="_blank" rel="noopener noreferrer">dev.epicgames.com</a></li>
+      </ol>
+
+      <div class="note">
+        <span class="n-t">免责声明</span>
+        本文为通用建议，不构成对具体项目的承诺。引擎能力与版本计划以 Epic 官方文档为准，成本区间随地区、渠道与汇率波动，仅供量级参考。资料时点 2026 年 11 月。
+      </div>
+    </section>
+
+    <footer class="foot">
+      <p>喜欢本项目？<a href="https://github.com/xuvoxuvo/game-industry-handbook">点个 Star</a> 吧！</p>
+      <p>Copyright © 2017-2026 设计者笔记. All rights reserved.</p>
+    </footer>
+
+  </main>
+</div>
+
+<script>
+(function(){
+  var sections = Array.prototype.slice.call(document.querySelectorAll('main > .content-section'));
+  var navLinks = Array.prototype.slice.call(document.querySelectorAll('.rail nav a[data-section]'));
+  var cases = Array.prototype.slice.call(document.querySelectorAll('.case'));
+  var percent = document.getElementById('readingPercent');
+  var fill = document.getElementById('readingFill');
+  var position = document.getElementById('readingPosition');
+  var casePosition = document.getElementById('casePosition');
+  var bar = document.getElementById('readingBar');
+  var topFill = document.getElementById('topFill');
+  var scheduled = false;
+
+  function updateReading(){
+    scheduled = false;
+    var max = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+    var progress = max ? Math.min(100, Math.max(0, 100 * window.scrollY / max)) : 100;
+    var rounded = Math.round(progress);
+    if (percent) percent.textContent = rounded + '%';
+    if (fill) fill.style.width = progress + '%';
+    if (topFill) topFill.style.width = progress + '%';
+    if (bar) bar.setAttribute('aria-valuenow', String(rounded));
+
+    var threshold = Math.min(200, window.innerHeight * 0.23);
+    var index = 0;
+    sections.forEach(function(section, i){
+      if (section.getBoundingClientRect().top <= threshold) index = i;
+    });
+    if (max - window.scrollY < 3) index = sections.length - 1;
+
+    navLinks.forEach(function(link, i){
+      link.classList.toggle('active', i === index);
+      link.classList.toggle('visited', i < index);
+      if (i === index) link.setAttribute('aria-current', 'location');
+      else link.removeAttribute('aria-current');
+    });
+    if (position && navLinks[index]) position.textContent = navLinks[index].dataset.label;
+
+    var activeCase = null;
+    cases.forEach(function(c){ if (c.getBoundingClientRect().top <= threshold) activeCase = c; });
+    if (casePosition){
+      casePosition.hidden = !activeCase;
+      if (activeCase){
+        var n = cases.indexOf(activeCase) + 1;
+        casePosition.textContent = '案例 ' + String(n).padStart(2, '0') + ' / ' + cases.length + ' · ' + activeCase.querySelector('h3').textContent;
+      }
+    }
+  }
+
+  function requestUpdate(){
+    if (!scheduled){ scheduled = true; requestAnimationFrame(updateReading); }
+  }
+
+  window.addEventListener('scroll', requestUpdate, {passive: true});
+  window.addEventListener('resize', requestUpdate);
+  window.addEventListener('load', requestUpdate);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(requestUpdate);
+  updateReading();
+})();
+</script>
+</body>
+</html>
+

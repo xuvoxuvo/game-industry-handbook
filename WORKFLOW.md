@@ -173,6 +173,17 @@ Copy-Item -Recurse articles\2026-mobile-game-metrics articles\<slug>
 
 `案例 01 / 05` 的分子按顺序递增、分母写总数；右下角「当前案例」提示由脚本自动跟踪。
 
+### 列表
+
+普通要点用 `<ul>`（方块标记、强调色），编号要点用 `ol.mis`（带编号方块，适合「五条判断」「常见误读」这类）。
+
+```html
+<ul>
+  <li><strong>移动</strong>：采用 Motion Matching。</li>
+  <li>命中判定使用动画通知状态配合多点扫描。</li>
+</ul>
+```
+
 ### 编号列表（误读、要点）
 
 ```html
